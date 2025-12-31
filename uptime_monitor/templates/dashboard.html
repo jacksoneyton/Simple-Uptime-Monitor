@@ -22,7 +22,7 @@
 </div>
 
 {% for group_name in group_order %}
-    {% if monitor_statuses|selectattr('group', 'equalto', group_name)|list|length > 0 %}
+    {% if monitor_statuses.values()|selectattr('group', 'equalto', group_name)|list|length > 0 %}
     <div class="monitor-group">
         <h2 class="group-title">{{ group_name }}</h2>
         <div class="monitor-list">
@@ -89,7 +89,7 @@
 {% endfor %}
 
 {# Handle ungrouped monitors #}
-{% if monitor_statuses|selectattr('group', 'equalto', 'Ungrouped')|list|length > 0 %}
+{% if monitor_statuses.values()|selectattr('group', 'equalto', 'Ungrouped')|list|length > 0 %}
 <div class="monitor-group">
     <h2 class="group-title">Ungrouped</h2>
     <div class="monitor-list">

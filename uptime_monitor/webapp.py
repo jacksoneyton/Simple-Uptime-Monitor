@@ -257,6 +257,47 @@ def api_push_update(monitor_id, secret_key):
         session.close()
 
 
+@app.route('/debug')
+def debug_data():
+    """Debug endpoint to see what data is being passed to template"""
+    session = get_session()
+    try:
+        config = get_config()
+        monitors = session.query(MonitorModel).filter_by(enabled=True).all()
+        groups = config.get_monitors_by_group()
+        group_order = config.get_group_display_order()
+
+        # Get latest check results for each monitor
+        monitor_statuses = {}
+        for monitor in monitors:
+            latest_check = session.query(CheckResult)\
+                .filter_by(monitor_id=monitor.id)\
+                .order_by(CheckResult.timestamp.desc())\
+                .first()
+
+            target_info = _get_monitor_target(monitor.type, monitor.config)
+
+            monitor_statuses[monitor.name] = {
+                'id': monitor.id,
+                'name': monitor.name,
+                'type': monitor.type,
+                'group': monitor.group_name or 'Ungrouped',
+                'target': target_info,
+                'status': latest_check.status if latest_check else 'unknown',
+            }
+
+        debug_info = {
+            'total_monitors': len(monitors),
+            'group_order': group_order,
+            'groups_in_config': list(groups.keys()),
+            'monitor_statuses': monitor_statuses
+        }
+
+        return jsonify(debug_info)
+    finally:
+        session.close()
+
+
 @app.route('/settings')
 def settings():
     """Settings/configuration view (read-only)"""
