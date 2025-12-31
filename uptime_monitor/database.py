@@ -8,8 +8,8 @@ import json
 import logging
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Float, DateTime, Date, Text, ForeignKey, Index, JSON
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship, Session
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.orm import sessionmaker, relationship, Session, scoped_session
+from sqlalchemy.pool import NullPool
 
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ class CheckResult(Base):
     response_time = Column(Float)  # milliseconds
     status_code = Column(Integer)
     error_message = Column(Text)
-    metadata = Column(JSON)
+    check_metadata = Column(JSON)  # Renamed from 'metadata' to avoid SQLAlchemy conflict
 
     # Relationship
     monitor = relationship("MonitorModel", back_populates="check_results")
@@ -220,16 +220,22 @@ class Database:
 
         # Configure engine
         if database_url.startswith('sqlite'):
-            # SQLite-specific configuration
+            # SQLite-specific configuration for thread safety
             self.engine = create_engine(
                 database_url,
-                connect_args={'check_same_thread': False},
-                poolclass=StaticPool
+                connect_args={
+                    'check_same_thread': False,
+                    'timeout': 30  # 30 second timeout for locks
+                },
+                poolclass=NullPool,  # No connection pooling for SQLite
+                echo=False
             )
         else:
             self.engine = create_engine(database_url)
 
-        self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        # Use scoped_session for thread-safe session management
+        session_factory = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.SessionLocal = scoped_session(session_factory)
 
     def init_db(self) -> None:
         """Initialize database tables"""
@@ -238,8 +244,12 @@ class Database:
         logger.info("Database tables created successfully")
 
     def get_session(self) -> Session:
-        """Get a new database session"""
+        """Get a thread-local database session"""
         return self.SessionLocal()
+
+    def remove_session(self) -> None:
+        """Remove the current thread's session"""
+        self.SessionLocal.remove()
 
     def drop_all(self) -> None:
         """Drop all tables (use with caution!)"""
