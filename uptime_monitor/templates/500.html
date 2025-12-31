@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}500 Internal Server Error - Simple Uptime Monitor{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <h1>500 - Internal Server Error</h1>
+    <p>Something went wrong on our end. Please try again later.</p>
+    <a href="/" class="btn">Return to Dashboard</a>
+</div>
+
+<style>
+.error-page {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.error-page h1 {
+    font-size: 48px;
+    color: #e74c3c;
+    margin-bottom: 20px;
+}
+
+.error-page p {
+    font-size: 18px;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+}
+
+.error-page .btn {
+    display: inline-block;
+    padding: 12px 24px;
+    background: #3498db;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background 0.3s;
+}
+
+.error-page .btn:hover {
+    background: #2980b9;
+}
+</style>
+{% endblock %}
