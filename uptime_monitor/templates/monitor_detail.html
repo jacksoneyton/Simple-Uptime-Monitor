@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}{{ monitor.name }} - Simple Uptime Monitor{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="detail-header">
+    <div>
+        <a href="/" class="back-link">&larr; Back to Dashboard</a>
+        <h1>{{ monitor.name }}</h1>
+        <p class="monitor-type-detail">Type: {{ monitor.type }}</p>
+    </div>
+    <div>
+        {% if latest_check %}
+        <span class="status-badge status-{{ latest_check.status }} large">{{ latest_check.status|upper }}</span>
+        {% else %}
+        <span class="status-badge status-unknown large">UNKNOWN</span>
+        {% endif %}
+    </div>
+</div>
+
+<div class="detail-stats">
+    <div class="stat-box">
+        <div class="stat-label">Current Status</div>
+        <div class="stat-value">{{ latest_check.status|upper if latest_check else 'UNKNOWN' }}</div>
+        {% if latest_check %}
+        <div class="stat-meta">Last checked {{ latest_check.timestamp|timeago }}</div>
+        {% endif %}
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-label">Response Time</div>
+        <div class="stat-value">
+            {% if latest_check and latest_check.response_time %}
+            {{ "%.0f"|format(latest_check.response_time) }}ms
+            {% else %}
+            N/A
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-label">Uptime (24h)</div>
+        <div class="stat-value">{{ "%.2f"|format(uptime_stats['24h']) }}%</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-label">Uptime (7d)</div>
+        <div class="stat-value">{{ "%.2f"|format(uptime_stats['7d']) }}%</div>
+    </div>
+
+    <div class="stat-box">
+        <div class="stat-label">Uptime (30d)</div>
+        <div class="stat-value">{{ "%.2f"|format(uptime_stats['30d']) }}%</div>
+    </div>
+</div>
+
+<div class="chart-container">
+    <h2>Response Time (Last 24 Hours)</h2>
+    <canvas id="responseTimeChart"></canvas>
+</div>
+
+<div class="incidents-section">
+    <h2>Recent Incidents</h2>
+
+    {% if recent_incidents %}
+    <table class="incidents-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Started</th>
+                <th>Ended</th>
+                <th>Duration</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in recent_incidents %}
+            <tr>
+                <td>#{{ incident.id }}</td>
+                <td>{{ incident.started_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                <td>
+                    {% if incident.ended_at %}
+                    {{ incident.ended_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                    {% else %}
+                    <span class="ongoing">Ongoing</span>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if incident.duration %}
+                    {{ incident.duration|duration }}
+                    {% elif incident.ended_at %}
+                    {{ ((incident.ended_at - incident.started_at).total_seconds()|int)|duration }}
+                    {% else %}
+                    {{ ((now() - incident.started_at).total_seconds()|int)|duration }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if incident.ended_at %}
+                    <span class="badge badge-resolved">Resolved</span>
+                    {% else %}
+                    <span class="badge badge-ongoing">Ongoing</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p class="no-incidents">No recent incidents.</p>
+    {% endif %}
+</div>
+
+<div class="config-section">
+    <h2>Configuration</h2>
+    <table class="config-table">
+        <tr>
+            <th>Type</th>
+            <td>{{ monitor.type }}</td>
+        </tr>
+        <tr>
+            <th>Group</th>
+            <td>{{ monitor.group_name or 'Ungrouped' }}</td>
+        </tr>
+        <tr>
+            <th>Check Interval</th>
+            <td>{{ monitor.interval }}s</td>
+        </tr>
+        <tr>
+            <th>Timeout</th>
+            <td>{{ monitor.timeout }}s</td>
+        </tr>
+        <tr>
+            <th>Retry Count</th>
+            <td>{{ monitor.retry_count }}</td>
+        </tr>
+    </table>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Load chart data and render
+fetch('/api/monitor/{{ monitor.id }}/history?hours=24')
+    .then(response => response.json())
+    .then(data => {
+        const ctx = document.getElementById('responseTimeChart');
+        const labels = data.data_points.map(p => new Date(p.timestamp).toLocaleTimeString());
+        const values = data.data_points.map(p => p.response_time || 0);
+        const statuses = data.data_points.map(p => p.status);
+
+        // Color points based on status
+        const pointColors = statuses.map(s => {
+            if (s === 'up') return 'rgba(40, 167, 69, 0.8)';
+            if (s === 'down') return 'rgba(220, 53, 69, 0.8)';
+            return 'rgba(108, 117, 125, 0.8)';
+        });
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Response Time (ms)',
+                    data: values,
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderWidth: 2,
+                    pointBackgroundColor: pointColors,
+                    pointRadius: 3,
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Response Time (ms)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Time'
+                        },
+                        ticks: {
+                            maxTicksLimit: 12
+                        }
+                    }
+                }
+            }
+        });
+    })
+    .catch(err => console.error('Failed to load chart data:', err));
+</script>
+{% endblock %}

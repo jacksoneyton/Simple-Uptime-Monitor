@@ -1,0 +1,37 @@
+[Unit]
+Description=Simple Uptime Monitor
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=jack
+Group=jack
+WorkingDirectory=/home/jack/Simple-Uptime-Monitor
+Environment="PATH=/home/jack/Simple-Uptime-Monitor/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="PYTHONUNBUFFERED=1"
+
+# Load environment variables from file (for secrets)
+EnvironmentFile=-/home/jack/Simple-Uptime-Monitor/.env
+
+# Run the application
+ExecStart=/home/jack/Simple-Uptime-Monitor/venv/bin/python -m uptime_monitor.main
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/jack/Simple-Uptime-Monitor/data
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=uptime-monitor
+
+[Install]
+WantedBy=multi-user.target

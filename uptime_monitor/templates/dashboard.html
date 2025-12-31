@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Simple Uptime Monitor{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Monitor Dashboard</h1>
+    <div class="stats">
+        <div class="stat-card">
+            <div class="stat-value">{{ "%.1f"|format(overall_uptime) }}%</div>
+            <div class="stat-label">Overall Uptime</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ up_count }}/{{ total_monitors }}</div>
+            <div class="stat-label">Monitors UP</div>
+        </div>
+        <div class="stat-card {% if down_count > 0 %}stat-down{% endif %}">
+            <div class="stat-value">{{ down_count }}</div>
+            <div class="stat-label">Down</div>
+        </div>
+    </div>
+</div>
+
+{% for group_name in group_order %}
+    {% if monitor_statuses|selectattr('group', 'equalto', group_name)|list|length > 0 %}
+    <div class="monitor-group">
+        <h2 class="group-title">{{ group_name }}</h2>
+        <div class="monitor-list">
+            {% for name, status in monitor_statuses.items() if status.group == group_name %}
+            <div class="monitor-card status-{{ status.status }}" data-monitor-id="{{ status.id }}">
+                <div class="monitor-header">
+                    <div class="monitor-info">
+                        <h3><a href="/monitor/{{ status.id }}">{{ status.name }}</a></h3>
+                        <span class="monitor-type">{{ status.type }}</span>
+                    </div>
+                    <div class="monitor-status">
+                        <span class="status-badge status-{{ status.status }}">{{ status.status|upper }}</span>
+                        {% if status.response_time %}
+                        <span class="response-time">{{ "%.0f"|format(status.response_time) }}ms</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if status.ongoing_incident %}
+                <div class="incident-banner">
+                    Ongoing incident #{{ status.ongoing_incident }}
+                </div>
+                {% endif %}
+
+                {% if status.error_message %}
+                <div class="error-message">
+                    {{ status.error_message }}
+                </div>
+                {% endif %}
+
+                <div class="monitor-footer">
+                    <span class="last-checked">Last checked: {{ status.last_checked|timeago }}</span>
+                    <span class="uptime">Uptime (24h): {{ "%.2f"|format(status.uptime_24h) }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+{% endfor %}
+
+{# Handle ungrouped monitors #}
+{% if monitor_statuses|selectattr('group', 'equalto', 'Ungrouped')|list|length > 0 %}
+<div class="monitor-group">
+    <h2 class="group-title">Ungrouped</h2>
+    <div class="monitor-list">
+        {% for name, status in monitor_statuses.items() if status.group == 'Ungrouped' %}
+        <div class="monitor-card status-{{ status.status }}" data-monitor-id="{{ status.id }}">
+            <div class="monitor-header">
+                <div class="monitor-info">
+                    <h3><a href="/monitor/{{ status.id }}">{{ status.name }}</a></h3>
+                    <span class="monitor-type">{{ status.type }}</span>
+                </div>
+                <div class="monitor-status">
+                    <span class="status-badge status-{{ status.status }}">{{ status.status|upper }}</span>
+                    {% if status.response_time %}
+                    <span class="response-time">{{ "%.0f"|format(status.response_time) }}ms</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            {% if status.error_message %}
+            <div class="error-message">
+                {{ status.error_message }}
+            </div>
+            {% endif %}
+
+            <div class="monitor-footer">
+                <span class="last-checked">Last checked: {{ status.last_checked|timeago }}</span>
+                <span class="uptime">Uptime (24h): {{ "%.2f"|format(status.uptime_24h) }}%</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

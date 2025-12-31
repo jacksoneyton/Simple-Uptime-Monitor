@@ -1,0 +1,52 @@
+# Web Framework
+Flask==3.0.0
+Jinja2==3.1.2
+Werkzeug==3.0.1
+
+# Database
+SQLAlchemy==2.0.23
+alembic==1.13.1
+
+# HTTP Monitoring
+requests==2.31.0
+urllib3==2.1.0
+
+# DNS Monitoring
+dnspython==2.4.2
+
+# Ping Monitoring (ICMP)
+icmplib==3.0.4
+
+# WebSocket Monitoring
+websocket-client==1.6.4
+
+# Docker Monitoring (optional)
+docker==7.0.0
+
+# Notifications
+discord-webhook==1.3.0
+slack-sdk==3.26.1
+
+# Configuration
+PyYAML==6.0.1
+python-dotenv==1.0.0
+
+# JSON Query (for HTTP JSON validation)
+jsonpath-ng==1.6.0
+
+# Scheduling
+schedule==1.2.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Security (SSL certificate checking)
+cryptography==41.0.7
+certifi==2023.11.17
+
+# Chart.js for web dashboard (will be loaded via CDN)
+# Testing (development only - uncomment if needed)
+# pytest==7.4.3
+# pytest-flask==1.3.0
+# pytest-cov==4.1.0

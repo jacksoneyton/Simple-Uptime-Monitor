@@ -1,0 +1,461 @@
+/* Simple Uptime Monitor - Stylesheet */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background-color: #f5f5f5;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Navbar */
+.navbar {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-brand a {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.navbar-menu {
+    float: right;
+    margin-top: 0.5rem;
+}
+
+.nav-link {
+    color: white;
+    text-decoration: none;
+    margin-left: 1.5rem;
+    opacity: 0.9;
+}
+
+.nav-link:hover {
+    opacity: 1;
+}
+
+/* Main content */
+main {
+    padding: 2rem 0;
+    min-height: calc(100vh - 150px);
+}
+
+/* Dashboard */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    margin-bottom: 1.5rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-card.stat-down {
+    border-left: 4px solid #dc3545;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+/* Monitor groups */
+.monitor-group {
+    margin-bottom: 2.5rem;
+}
+
+.group-title {
+    color: #2c3e50;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.monitor-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1rem;
+}
+
+/* Monitor cards */
+.monitor-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-left: 4px solid #6c757d;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.monitor-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.monitor-card.status-up {
+    border-left-color: #28a745;
+}
+
+.monitor-card.status-down {
+    border-left-color: #dc3545;
+}
+
+.monitor-card.status-degraded {
+    border-left-color: #ffc107;
+}
+
+.monitor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 0.75rem;
+}
+
+.monitor-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.monitor-info h3 a {
+    color: #2c3e50;
+    text-decoration: none;
+}
+
+.monitor-info h3 a:hover {
+    color: #3498db;
+}
+
+.monitor-type {
+    display: inline-block;
+    background: #e9ecef;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #495057;
+    text-transform: uppercase;
+}
+
+.monitor-status {
+    text-align: right;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.35rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.status-badge.large {
+    padding: 0.6rem 1.2rem;
+    font-size: 1rem;
+}
+
+.status-badge.status-up {
+    background-color: #28a745;
+    color: white;
+}
+
+.status-badge.status-down {
+    background-color: #dc3545;
+    color: white;
+}
+
+.status-badge.status-degraded {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.status-badge.status-unknown {
+    background-color: #6c757d;
+    color: white;
+}
+
+.response-time {
+    display: block;
+    color: #6c757d;
+    font-size: 0.85rem;
+}
+
+.incident-banner {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.error-message {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 0.5rem;
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.monitor-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #6c757d;
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.75rem;
+}
+
+/* Monitor detail page */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 2rem;
+}
+
+.back-link {
+    color: #3498db;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+
+.detail-header h1 {
+    margin: 0.5rem 0;
+}
+
+.monitor-type-detail {
+    color: #6c757d;
+}
+
+.detail-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-box {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.stat-box .stat-label {
+    color: #6c757d;
+    font-size: 0.85rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-box .stat-value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #2c3e50;
+}
+
+.stat-box .stat-meta {
+    color: #6c757d;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+/* Chart */
+.chart-container {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+    height: 400px;
+}
+
+.chart-container h2 {
+    margin-bottom: 1rem;
+}
+
+.chart-container canvas {
+    max-height: 320px;
+}
+
+/* Incidents table */
+.incidents-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.incidents-section h2 {
+    margin-bottom: 1rem;
+}
+
+.incidents-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.incidents-table th,
+.incidents-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.incidents-table th {
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #495057;
+}
+
+.incidents-table tr:last-child td {
+    border-bottom: none;
+}
+
+.ongoing {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-resolved {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.badge-ongoing {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.no-incidents {
+    color: #6c757d;
+    font-style: italic;
+}
+
+/* Config table */
+.config-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.config-section h2 {
+    margin-bottom: 1rem;
+}
+
+.config-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.config-table th,
+.config-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.config-table th {
+    width: 200px;
+    font-weight: 600;
+    color: #495057;
+    background-color: #f8f9fa;
+}
+
+.config-table tr:last-child th,
+.config-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Footer */
+.footer {
+    background-color: #2c3e50;
+    color: white;
+    padding: 1.5rem 0;
+    margin-top: 3rem;
+    text-align: center;
+}
+
+.footer p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .navbar-menu {
+        float: none;
+        margin-top: 1rem;
+    }
+
+    .monitor-list {
+        grid-template-columns: 1fr;
+    }
+
+    .detail-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Loading animation */
+.loading {
+    opacity: 0.6;
+    transition: opacity 0.3s;
+}

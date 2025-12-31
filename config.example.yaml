@@ -1,0 +1,464 @@
+# Simple Uptime Monitor - Example Configuration
+# See docs/YAML_REFERENCE.md for complete documentation
+
+# ============================================
+# GLOBAL SETTINGS
+# ============================================
+global:
+  # Default check interval for all monitors (can be overridden per monitor)
+  default_interval: 60  # seconds
+
+  # Database location
+  database: "data/uptime.db"
+
+  # Web server settings
+  web:
+    host: "0.0.0.0"  # Listen on all interfaces
+    port: 5000
+    secret_key: "CHANGE-THIS-TO-RANDOM-SECRET"  # For session management
+
+  # Timezone for reporting
+  timezone: "America/New_York"
+
+  # Data retention policy
+  retention:
+    ping_history_days: 30      # Keep detailed check results for 30 days
+    aggregate_after_days: 90   # Aggregate older data into daily stats
+
+# ============================================
+# NOTIFICATION CHANNELS
+# ============================================
+notifications:
+  # Email via SMTP
+  - name: "admin_email"
+    type: "email"
+    enabled: true
+    config:
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      smtp_user: "alerts@example.com"
+      smtp_password: "${SMTP_PASSWORD}"  # From environment or .env file
+      smtp_use_tls: true
+      from_address: "alerts@example.com"
+      to_addresses:
+        - "admin@example.com"
+        - "oncall@example.com"
+
+  # Discord webhook
+  - name: "discord_devops"
+    type: "discord"
+    enabled: true
+    config:
+      webhook_url: "${DISCORD_WEBHOOK_URL}"
+      username: "Uptime Monitor"
+      # Optional: mention role on critical alerts
+      # mention_role_id: "123456789"
+
+  # Slack webhook
+  - name: "slack_alerts"
+    type: "slack"
+    enabled: false  # Disabled by default
+    config:
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#alerts"
+      username: "Uptime Bot"
+
+# ============================================
+# MONITOR GROUPS
+# ============================================
+groups:
+  - name: "Production Services"
+    description: "Critical production infrastructure"
+    display_order: 1
+
+  - name: "External APIs"
+    description: "Third-party service dependencies"
+    display_order: 2
+
+  - name: "Internal Tools"
+    description: "Internal development and admin tools"
+    display_order: 3
+
+  - name: "Network Infrastructure"
+    description: "Servers and network equipment"
+    display_order: 4
+
+# ============================================
+# MONITORS
+# ============================================
+monitors:
+  # ==========================================
+  # HTTP/HTTPS Monitors
+  # ==========================================
+
+  - name: "Main Website"
+    type: "http"
+    enabled: true
+    group: "Production Services"
+    interval: 30       # Check every 30 seconds
+    timeout: 10        # Timeout after 10 seconds
+    retry_count: 3     # Retry 3 times before marking as down
+    retry_delay: 5     # Wait 5 seconds between retries
+
+    config:
+      url: "https://example.com"
+      method: "GET"
+      expected_status_codes: [200, 201]
+      follow_redirects: true
+      verify_ssl: true
+
+      # Optional: Custom headers
+      headers:
+        User-Agent: "UptimeMonitor/1.0"
+
+    notifications:
+      - "admin_email"
+      - "discord_devops"
+
+    alert_on:
+      - down        # Alert when service goes down
+      - up          # Alert when service recovers
+      - ssl_expire  # Alert when SSL cert expires soon (30 days)
+
+  # HTTP with keyword validation
+  - name: "Blog Homepage"
+    type: "http"
+    enabled: true
+    group: "Production Services"
+    interval: 60
+    timeout: 10
+
+    config:
+      url: "https://blog.example.com"
+      method: "GET"
+      expected_status_codes: [200]
+
+      # Keyword validation - ensure specific text appears on page
+      keyword:
+        search_for: "Welcome to our blog"
+        regex: false   # Use plain string search (set true for regex)
+        invert: false  # If true, fail if keyword IS found
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # HTTP with JSON validation
+  - name: "API Health Endpoint"
+    type: "http"
+    enabled: true
+    group: "Production Services"
+    interval: 30
+    timeout: 5
+
+    config:
+      url: "https://api.example.com/health"
+      method: "GET"
+      expected_status_codes: [200]
+
+      # JSON query validation using JSONPath
+      json_query:
+        path: "$.status"           # JSONPath expression
+        expected_value: "healthy"  # Expected value at that path
+        # Alternative: just check field exists
+        # exists: true
+
+    notifications:
+      - "admin_email"
+      - "discord_devops"
+    alert_on:
+      - down
+      - up
+
+  # HTTP POST with authentication
+  - name: "API Login Endpoint"
+    type: "http"
+    enabled: true
+    group: "Production Services"
+    interval: 120
+    timeout: 10
+
+    config:
+      url: "https://api.example.com/auth/login"
+      method: "POST"
+      expected_status_codes: [200, 400]  # 400 is OK (we're not sending valid creds)
+
+      headers:
+        Content-Type: "application/json"
+        Authorization: "Bearer ${API_TOKEN}"
+
+      # Optional: Request body
+      # body: '{"username": "test"}'
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # TCP Port Monitors
+  # ==========================================
+
+  - name: "PostgreSQL Database"
+    type: "tcp"
+    enabled: true
+    group: "Production Services"
+    interval: 60
+    timeout: 5
+    retry_count: 2
+
+    config:
+      host: "db.example.com"
+      port: 5432
+
+    notifications:
+      - "admin_email"
+      - "discord_devops"
+    alert_on:
+      - down
+      - up
+
+  - name: "Redis Cache"
+    type: "tcp"
+    enabled: true
+    group: "Production Services"
+    interval: 60
+    timeout: 5
+
+    config:
+      host: "cache.example.com"
+      port: 6379
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  - name: "SSH Server"
+    type: "tcp"
+    enabled: true
+    group: "Network Infrastructure"
+    interval: 120
+    timeout: 5
+
+    config:
+      host: "server.example.com"
+      port: 22
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # Ping (ICMP) Monitors
+  # ==========================================
+
+  - name: "Main Server Ping"
+    type: "ping"
+    enabled: true
+    group: "Network Infrastructure"
+    interval: 30
+    timeout: 5
+
+    config:
+      host: "server.example.com"
+      packet_count: 3   # Send 3 ICMP packets
+      packet_size: 56   # Packet size in bytes
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  - name: "Gateway Ping"
+    type: "ping"
+    enabled: true
+    group: "Network Infrastructure"
+    interval: 60
+
+    config:
+      host: "192.168.1.1"
+      packet_count: 4
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # DNS Monitors
+  # ==========================================
+
+  - name: "DNS A Record"
+    type: "dns"
+    enabled: true
+    group: "Network Infrastructure"
+    interval: 300  # Check every 5 minutes
+    timeout: 10
+
+    config:
+      hostname: "example.com"
+      resolver: "8.8.8.8"     # Google DNS
+      record_type: "A"         # A, AAAA, CNAME, MX, TXT, NS, etc.
+      expected_values:
+        - "192.0.2.1"
+        - "192.0.2.2"          # Any of these IPs is acceptable
+      match_mode: "any"        # "any" or "all" or "exact"
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  - name: "MX Record Check"
+    type: "dns"
+    enabled: true
+    group: "Network Infrastructure"
+    interval: 3600  # Check hourly
+
+    config:
+      hostname: "example.com"
+      resolver: "1.1.1.1"  # Cloudflare DNS
+      record_type: "MX"
+      # For MX, just check if the record contains expected mail server
+      expected_contains: "mail.example.com"
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # WebSocket Monitors
+  # ==========================================
+
+  - name: "WebSocket Server"
+    type: "websocket"
+    enabled: true
+    group: "Production Services"
+    interval: 60
+    timeout: 10
+
+    config:
+      url: "wss://ws.example.com/socket"
+
+      # Optional: Send message and expect response
+      send_message: '{"type": "ping"}'
+      expect_response: '{"type": "pong"}'
+      response_timeout: 5
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # Docker Container Monitors
+  # ==========================================
+
+  - name: "Nginx Container"
+    type: "docker"
+    enabled: false  # Disabled by default (requires Docker access)
+    group: "Production Services"
+    interval: 60
+
+    config:
+      # Connect to Docker socket
+      socket: "/var/run/docker.sock"  # or tcp://host:2375
+      container_name: "nginx-proxy"    # or use container_id
+
+      # Check health status
+      expect_status: "running"
+      check_health: true  # Use Docker's HEALTHCHECK if configured
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
+
+  # ==========================================
+  # Push-based Monitors (Passive Checks)
+  # ==========================================
+
+  - name: "Nightly Backup Job"
+    type: "push"
+    enabled: true
+    group: "Internal Tools"
+
+    config:
+      # How long to wait before considering job failed
+      expected_interval: 86400  # 24 hours in seconds
+      grace_period: 3600        # Allow 1 hour grace period
+
+      # Optionally require a status payload
+      require_payload: false
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down  # Alert if push doesn't arrive in time
+      - up    # Alert when push resumes
+
+    # Push monitors don't have interval - they wait for pushes
+    # Access at: http://your-server:5000/api/push/<monitor_id>/<secret_key>
+
+  # ==========================================
+  # External API Dependencies
+  # ==========================================
+
+  - name: "Stripe API"
+    type: "http"
+    enabled: true
+    group: "External APIs"
+    interval: 120
+    timeout: 10
+
+    config:
+      url: "https://api.stripe.com/v1/charges"
+      method: "GET"
+      headers:
+        Authorization: "Bearer ${STRIPE_API_KEY}"
+      # We expect 401 Unauthorized (we're not sending valid API key)
+      # This just checks if Stripe API is reachable
+      expected_status_codes: [200, 401]
+
+    notifications:
+      - "slack_alerts"
+    alert_on:
+      - down
+      - up
+
+  - name: "GitHub API"
+    type: "http"
+    enabled: true
+    group: "External APIs"
+    interval: 180
+    timeout: 10
+
+    config:
+      url: "https://api.github.com"
+      method: "GET"
+      expected_status_codes: [200]
+
+      # Validate JSON response structure
+      json_query:
+        path: "$.current_user_url"
+        exists: true  # Just check the field exists
+
+    notifications:
+      - "admin_email"
+    alert_on:
+      - down
+      - up
