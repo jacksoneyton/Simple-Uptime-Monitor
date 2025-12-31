@@ -58,6 +58,9 @@ def dashboard():
                 .filter_by(monitor_id=monitor.id, ended_at=None)\
                 .first()
 
+            # Extract target info from config based on monitor type
+            target_info = _get_monitor_target(monitor.type, monitor.config)
+
             monitor_statuses[monitor.name] = {
                 'id': monitor.id,
                 'name': monitor.name,
@@ -68,7 +71,12 @@ def dashboard():
                 'last_checked': latest_check.timestamp if latest_check else None,
                 'error_message': latest_check.error_message if latest_check else None,
                 'ongoing_incident': ongoing_incident.id if ongoing_incident else None,
-                'uptime_24h': _calculate_uptime(session, monitor.id, hours=24)
+                'uptime_24h': _calculate_uptime(session, monitor.id, hours=24),
+                'uptime_7d': _calculate_uptime(session, monitor.id, days=7),
+                'uptime_30d': _calculate_uptime(session, monitor.id, days=30),
+                'interval': monitor.interval,
+                'target': target_info,
+                'config': monitor.config
             }
 
         # Calculate overall statistics
@@ -256,6 +264,40 @@ def settings():
 
     return render_template('settings.html',
                          config=config)
+
+
+def _get_monitor_target(monitor_type: str, config: dict) -> str:
+    """
+    Extract human-readable target information from monitor config.
+
+    Args:
+        monitor_type: Type of monitor
+        config: Monitor configuration dict
+
+    Returns:
+        Human-readable target string
+    """
+    if monitor_type == 'http':
+        return config.get('url', 'Unknown')
+    elif monitor_type == 'tcp':
+        host = config.get('host', 'Unknown')
+        port = config.get('port', '')
+        return f"{host}:{port}" if port else host
+    elif monitor_type == 'ping':
+        return config.get('host', 'Unknown')
+    elif monitor_type == 'dns':
+        hostname = config.get('hostname', 'Unknown')
+        record_type = config.get('record_type', 'A')
+        resolver = config.get('resolver', '8.8.8.8')
+        return f"{hostname} ({record_type}) via {resolver}"
+    elif monitor_type == 'websocket':
+        return config.get('url', 'Unknown')
+    elif monitor_type == 'docker':
+        return config.get('container_name', 'Unknown')
+    elif monitor_type == 'push':
+        return 'Push-based (passive)'
+    else:
+        return 'Unknown'
 
 
 def _calculate_uptime(session, monitor_id: int, hours: int = None, days: int = None) -> float:

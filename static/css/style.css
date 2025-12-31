@@ -243,6 +243,88 @@ main {
     padding-top: 0.75rem;
 }
 
+/* Monitor meta information */
+.monitor-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.badge-type {
+    display: inline-block;
+    background: #e9ecef;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    color: #495057;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.monitor-target {
+    font-size: 0.85rem;
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+}
+
+/* Monitor details section */
+.monitor-details {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin: 0.75rem 0;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.85rem;
+}
+
+.detail-label {
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.detail-value {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+/* Monitor uptime statistics */
+.monitor-uptime {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-around;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.uptime-stat {
+    text-align: center;
+    flex: 1;
+}
+
+.uptime-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #6c757d;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+}
+
+.uptime-value {
+    display: block;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
 /* Monitor detail page */
 .detail-header {
     display: flex;
