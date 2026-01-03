@@ -26,7 +26,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=read-only
-ReadWritePaths=/home/jack/Simple-Uptime-Monitor/data
+ReadWritePaths=/home/jack/Simple-Uptime-Monitor/data /home/jack/Simple-Uptime-Monitor/config.yaml
 
 # Logging
 StandardOutput=journal
