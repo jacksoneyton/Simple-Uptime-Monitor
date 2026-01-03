@@ -2,10 +2,12 @@
 Flask web application for dashboard and API.
 """
 
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, redirect, url_for, flash
 from datetime import datetime, timedelta
 from sqlalchemy import func
 import logging
+import yaml
+import os
 
 from uptime_monitor.config import get_config
 from uptime_monitor.database import (
@@ -439,3 +441,232 @@ def duration_filter(seconds):
         days = int(seconds / 86400)
         hours = int((seconds % 86400) / 3600)
         return f"{days}d {hours}h"
+
+# ============================================================================
+# Monitor Management Routes
+# ============================================================================
+
+def _load_yaml_config():
+    """Load config.yaml file"""
+    config_path = os.path.join(os.getcwd(), 'config.yaml')
+    with open(config_path, 'r') as f:
+        return yaml.safe_load(f)
+
+
+def _save_yaml_config(config_data):
+    """Save config.yaml file"""
+    config_path = os.path.join(os.getcwd(), 'config.yaml')
+    with open(config_path, 'w') as f:
+        yaml.dump(config_data, f, default_flow_style=False, sort_keys=False)
+
+
+def _reload_config():
+    """Reload configuration (requires app restart for now)"""
+    # For now, we'll require a manual restart
+    # Future: Could implement hot reload by restarting scheduler
+    pass
+
+
+@app.route('/monitors/manage')
+def monitors_manage():
+    """Monitor management page"""
+    try:
+        yaml_config = _load_yaml_config()
+        monitors = yaml_config.get('monitors', [])
+        
+        # Get target info for each monitor
+        for monitor in monitors:
+            monitor['target'] = _get_monitor_target(monitor['type'], monitor.get('config', {}))
+        
+        return render_template('monitors_manage.html', monitors=monitors)
+    except Exception as e:
+        logger.error(f"Error loading monitors: {e}")
+        return f"Error loading monitors: {str(e)}", 500
+
+
+@app.route('/monitors/add', methods=['GET', 'POST'])
+def monitor_add():
+    """Add new monitor"""
+    if request.method == 'POST':
+        try:
+            yaml_config = _load_yaml_config()
+            
+            # Build monitor config from form data
+            monitor_config = _build_monitor_from_form(request.form)
+            
+            # Check for duplicate name
+            existing_names = [m['name'] for m in yaml_config.get('monitors', [])]
+            if monitor_config['name'] in existing_names:
+                return render_template('monitor_form.html', 
+                                     error="Monitor name already exists",
+                                     groups=_get_groups_list(),
+                                     monitor=None)
+            
+            # Add to config
+            if 'monitors' not in yaml_config:
+                yaml_config['monitors'] = []
+            yaml_config['monitors'].append(monitor_config)
+            
+            # Save config
+            _save_yaml_config(yaml_config)
+
+            logger.info(f"Added new monitor: {monitor_config['name']}")
+            return redirect(url_for('monitors_reload'))
+            
+        except Exception as e:
+            logger.error(f"Error adding monitor: {e}")
+            return render_template('monitor_form.html',
+                                 error=f"Error: {str(e)}",
+                                 groups=_get_groups_list(),
+                                 monitor=None)
+    
+    # GET request - show form
+    return render_template('monitor_form.html', 
+                         monitor=None,
+                         groups=_get_groups_list())
+
+
+@app.route('/monitors/edit/<int:monitor_index>', methods=['GET', 'POST'])
+def monitor_edit(monitor_index):
+    """Edit existing monitor"""
+    try:
+        yaml_config = _load_yaml_config()
+        monitors = yaml_config.get('monitors', [])
+        
+        if monitor_index >= len(monitors):
+            return "Monitor not found", 404
+        
+        if request.method == 'POST':
+            # Build updated monitor config
+            monitor_config = _build_monitor_from_form(request.form)
+            
+            # Check for duplicate name (excluding current monitor)
+            existing_names = [m['name'] for i, m in enumerate(monitors) if i != monitor_index]
+            if monitor_config['name'] in existing_names:
+                return render_template('monitor_form.html',
+                                     error="Monitor name already exists",
+                                     groups=_get_groups_list(),
+                                     monitor=monitors[monitor_index])
+            
+            # Update monitor
+            monitors[monitor_index] = monitor_config
+            _save_yaml_config(yaml_config)
+
+            logger.info(f"Updated monitor: {monitor_config['name']}")
+            return redirect(url_for('monitors_reload'))
+        
+        # GET request - show form with existing data
+        return render_template('monitor_form.html',
+                             monitor=monitors[monitor_index],
+                             groups=_get_groups_list())
+                             
+    except Exception as e:
+        logger.error(f"Error editing monitor: {e}")
+        return f"Error: {str(e)}", 500
+
+
+@app.route('/monitors/delete/<int:monitor_index>')
+def monitor_delete(monitor_index):
+    """Delete monitor"""
+    try:
+        yaml_config = _load_yaml_config()
+        monitors = yaml_config.get('monitors', [])
+        
+        if monitor_index >= len(monitors):
+            return "Monitor not found", 404
+        
+        deleted_name = monitors[monitor_index]['name']
+        del monitors[monitor_index]
+
+        _save_yaml_config(yaml_config)
+
+        logger.info(f"Deleted monitor: {deleted_name}")
+        return redirect(url_for('monitors_reload'))
+        
+    except Exception as e:
+        logger.error(f"Error deleting monitor: {e}")
+        return f"Error: {str(e)}", 500
+
+
+def _build_monitor_from_form(form):
+    """Build monitor configuration dict from form data"""
+    monitor_type = form.get('type')
+    
+    # Basic config
+    monitor = {
+        'name': form.get('name'),
+        'type': monitor_type,
+        'enabled': 'enabled' in form,
+        'group': form.get('group') or None,
+        'interval': int(form.get('interval', 60)),
+        'timeout': int(form.get('timeout', 10)),
+        'retry_count': 1,
+        'config': {},
+        'notifications': [],
+        'alert_on': ['down', 'up']
+    }
+    
+    # Type-specific config
+    if monitor_type == 'http':
+        monitor['config'] = {
+            'url': form.get('http_url'),
+            'method': form.get('http_method', 'GET'),
+            'expected_status_codes': [int(c.strip()) for c in form.get('http_expected_codes', '200').split(',')],
+            'verify_ssl': True
+        }
+    elif monitor_type == 'tcp':
+        monitor['config'] = {
+            'host': form.get('tcp_host'),
+            'port': int(form.get('tcp_port'))
+        }
+    elif monitor_type == 'ping':
+        monitor['config'] = {
+            'host': form.get('ping_host'),
+            'packet_count': int(form.get('ping_count', 3))
+        }
+    elif monitor_type == 'dns':
+        monitor['config'] = {
+            'hostname': form.get('dns_hostname'),
+            'record_type': form.get('dns_record_type', 'A'),
+            'resolver': form.get('dns_resolver', '8.8.8.8')
+        }
+    elif monitor_type == 'websocket':
+        monitor['config'] = {
+            'url': form.get('ws_url')
+        }
+    elif monitor_type == 'docker':
+        monitor['config'] = {
+            'container_name': form.get('docker_container')
+        }
+    
+    return monitor
+
+
+def _get_groups_list():
+    """Get list of existing groups from config"""
+    try:
+        yaml_config = _load_yaml_config()
+        groups = set()
+        
+        # Get groups from monitors
+        for monitor in yaml_config.get('monitors', []):
+            if monitor.get('group'):
+                groups.add(monitor['group'])
+        
+        # Get groups from groups section
+        for group in yaml_config.get('groups', []):
+            groups.add(group['name'])
+        
+        return sorted(list(groups))
+    except:
+        return []
+
+
+@app.route('/monitors/reload')
+def monitors_reload():
+    """Reload monitor configuration"""
+    try:
+        # This requires restarting the service
+        return render_template('reload_required.html')
+    except Exception as e:
+        return f"Error: {str(e)}", 500

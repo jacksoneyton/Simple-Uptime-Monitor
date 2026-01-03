@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Edit' if monitor else 'Add' }} Monitor - Simple Uptime Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ 'Edit' if monitor else 'Add New' }} Monitor</h1>
+    <a href="/monitors/manage" class="btn btn-secondary">← Back to Monitors</a>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<form method="POST" class="monitor-form" id="monitorForm">
+    <div class="form-section">
+        <h2>Basic Information</h2>
+
+        <div class="form-group">
+            <label for="name">Monitor Name *</label>
+            <input type="text" id="name" name="name" value="{{ monitor.name if monitor else '' }}" required>
+            <small>Unique name to identify this monitor</small>
+        </div>
+
+        <div class="form-group">
+            <label for="type">Monitor Type *</label>
+            <select id="type" name="type" required onchange="updateConfigFields()">
+                <option value="">Select type...</option>
+                <option value="http" {% if monitor and monitor.type == 'http' %}selected{% endif %}>HTTP/HTTPS</option>
+                <option value="tcp" {% if monitor and monitor.type == 'tcp' %}selected{% endif %}>TCP Port</option>
+                <option value="ping" {% if monitor and monitor.type == 'ping' %}selected{% endif %}>Ping (ICMP)</option>
+                <option value="dns" {% if monitor and monitor.type == 'dns' %}selected{% endif %}>DNS Query</option>
+                <option value="websocket" {% if monitor and monitor.type == 'websocket' %}selected{% endif %}>WebSocket</option>
+                <option value="docker" {% if monitor and monitor.type == 'docker' %}selected{% endif %}>Docker Container</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="group">Group</label>
+            <input type="text" id="group" name="group" value="{{ monitor.group if monitor else '' }}" list="groups">
+            <datalist id="groups">
+                {% for group in groups %}
+                <option value="{{ group }}">
+                {% endfor %}
+            </datalist>
+            <small>Optional: Organize monitors into groups</small>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="interval">Check Interval (seconds) *</label>
+                <input type="number" id="interval" name="interval" value="{{ monitor.interval if monitor else 60 }}" min="10" required>
+            </div>
+
+            <div class="form-group">
+                <label for="timeout">Timeout (seconds) *</label>
+                <input type="number" id="timeout" name="timeout" value="{{ monitor.timeout if monitor else 10 }}" min="1" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>
+                <input type="checkbox" name="enabled" {% if not monitor or monitor.enabled %}checked{% endif %}>
+                Enabled
+            </label>
+        </div>
+    </div>
+
+    <div class="form-section">
+        <h2>Monitor Configuration</h2>
+
+        <!-- HTTP/HTTPS Config -->
+        <div id="config-http" class="config-section" style="display: none;">
+            <div class="form-group">
+                <label for="http_url">URL *</label>
+                <input type="url" id="http_url" name="http_url" placeholder="https://example.com">
+            </div>
+            <div class="form-group">
+                <label for="http_method">HTTP Method</label>
+                <select id="http_method" name="http_method">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="HEAD">HEAD</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="http_expected_codes">Expected Status Codes</label>
+                <input type="text" id="http_expected_codes" name="http_expected_codes" placeholder="200,201,204" value="200">
+                <small>Comma-separated list</small>
+            </div>
+        </div>
+
+        <!-- TCP Config -->
+        <div id="config-tcp" class="config-section" style="display: none;">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="tcp_host">Host *</label>
+                    <input type="text" id="tcp_host" name="tcp_host" placeholder="example.com">
+                </div>
+                <div class="form-group">
+                    <label for="tcp_port">Port *</label>
+                    <input type="number" id="tcp_port" name="tcp_port" placeholder="80" min="1" max="65535">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ping Config -->
+        <div id="config-ping" class="config-section" style="display: none;">
+            <div class="form-group">
+                <label for="ping_host">Host/IP *</label>
+                <input type="text" id="ping_host" name="ping_host" placeholder="1.1.1.1 or example.com">
+            </div>
+            <div class="form-group">
+                <label for="ping_count">Packet Count</label>
+                <input type="number" id="ping_count" name="ping_count" value="3" min="1" max="10">
+            </div>
+        </div>
+
+        <!-- DNS Config -->
+        <div id="config-dns" class="config-section" style="display: none;">
+            <div class="form-group">
+                <label for="dns_hostname">Hostname *</label>
+                <input type="text" id="dns_hostname" name="dns_hostname" placeholder="example.com">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="dns_record_type">Record Type</label>
+                    <select id="dns_record_type" name="dns_record_type">
+                        <option value="A">A</option>
+                        <option value="AAAA">AAAA</option>
+                        <option value="MX">MX</option>
+                        <option value="TXT">TXT</option>
+                        <option value="CNAME">CNAME</option>
+                        <option value="NS">NS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dns_resolver">DNS Resolver</label>
+                    <input type="text" id="dns_resolver" name="dns_resolver" value="8.8.8.8" placeholder="8.8.8.8">
+                </div>
+            </div>
+        </div>
+
+        <!-- WebSocket Config -->
+        <div id="config-websocket" class="config-section" style="display: none;">
+            <div class="form-group">
+                <label for="ws_url">WebSocket URL *</label>
+                <input type="text" id="ws_url" name="ws_url" placeholder="wss://example.com/socket">
+            </div>
+        </div>
+
+        <!-- Docker Config -->
+        <div id="config-docker" class="config-section" style="display: none;">
+            <div class="form-group">
+                <label for="docker_container">Container Name *</label>
+                <input type="text" id="docker_container" name="docker_container" placeholder="my-container">
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{{ 'Update' if monitor else 'Create' }} Monitor</button>
+        <a href="/monitors/manage" class="btn btn-secondary">Cancel</a>
+    </div>
+</form>
+
+<script>
+function updateConfigFields() {
+    const type = document.getElementById('type').value;
+    const sections = document.querySelectorAll('.config-section');
+    sections.forEach(section => section.style.display = 'none');
+
+    if (type) {
+        const targetSection = document.getElementById('config-' + type);
+        if (targetSection) {
+            targetSection.style.display = 'block';
+        }
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    updateConfigFields();
+
+    {% if monitor %}
+    // Populate config fields for edit mode
+    const config = {{ monitor.config|tojson }};
+    const type = '{{ monitor.type }}';
+
+    if (type === 'http') {
+        document.getElementById('http_url').value = config.url || '';
+        document.getElementById('http_method').value = config.method || 'GET';
+        document.getElementById('http_expected_codes').value = (config.expected_status_codes || [200]).join(',');
+    } else if (type === 'tcp') {
+        document.getElementById('tcp_host').value = config.host || '';
+        document.getElementById('tcp_port').value = config.port || '';
+    } else if (type === 'ping') {
+        document.getElementById('ping_host').value = config.host || '';
+        document.getElementById('ping_count').value = config.packet_count || 3;
+    } else if (type === 'dns') {
+        document.getElementById('dns_hostname').value = config.hostname || '';
+        document.getElementById('dns_record_type').value = config.record_type || 'A';
+        document.getElementById('dns_resolver').value = config.resolver || '8.8.8.8';
+    } else if (type === 'websocket') {
+        document.getElementById('ws_url').value = config.url || '';
+    } else if (type === 'docker') {
+        document.getElementById('docker_container').value = config.container_name || '';
+    }
+    {% endif %}
+});
+</script>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2c3e50;
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 4px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-error {
+    background: #fee;
+    color: #c00;
+    border: 1px solid #fcc;
+}
+
+.monitor-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+}
+
+.form-section h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: #2c3e50;
+    font-size: 1.3rem;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.form-group input[type="text"],
+.form-group input[type="url"],
+.form-group input[type="number"],
+.form-group select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1rem;
+}
+
+.config-section {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 4px;
+}
+</style>
+{% endblock %}

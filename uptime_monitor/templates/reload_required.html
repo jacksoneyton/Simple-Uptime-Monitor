@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Restart Required - Simple Uptime Monitor{% endblock %}
+
+{% block content %}
+<div class="reload-notice">
+    <h1>⚠️ Restart Required</h1>
+    <p>Monitor configuration has been updated successfully!</p>
+    <p class="highlight">To apply the changes, please restart the uptime monitor service:</p>
+
+    <div class="command-box">
+        <code>sudo systemctl restart uptime-monitor</code>
+    </div>
+
+    <p>After restarting, the new configuration will take effect.</p>
+
+    <div class="actions">
+        <a href="/monitors/manage" class="btn btn-primary">Back to Manage Monitors</a>
+        <a href="/" class="btn btn-secondary">Go to Dashboard</a>
+    </div>
+</div>
+
+<style>
+.reload-notice {
+    max-width: 600px;
+    margin: 3rem auto;
+    text-align: center;
+    background: white;
+    padding: 3rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.reload-notice h1 {
+    color: #f39c12;
+    margin-bottom: 1.5rem;
+}
+
+.reload-notice p {
+    color: #555;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.reload-notice .highlight {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.command-box {
+    background: #2c3e50;
+    color: #ecf0f1;
+    padding: 1.5rem;
+    border-radius: 4px;
+    margin: 2rem 0;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+}
+
+.command-box code {
+    color: #3498db;
+    font-weight: 600;
+}
+
+.actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+</style>
+{% endblock %}

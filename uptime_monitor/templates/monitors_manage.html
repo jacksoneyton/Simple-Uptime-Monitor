@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Monitors - Simple Uptime Monitor{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Manage Monitors</h1>
+    <a href="/monitors/add" class="btn btn-primary">+ Add New Monitor</a>
+</div>
+
+<div class="monitors-table">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Target</th>
+                <th>Group</th>
+                <th>Interval</th>
+                <th>Enabled</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for monitor in monitors %}
+            <tr class="{% if not monitor.enabled %}disabled-row{% endif %}">
+                <td><strong>{{ monitor.name }}</strong></td>
+                <td><span class="badge-type">{{ monitor.type|upper }}</span></td>
+                <td class="target-cell">{{ monitor.target }}</td>
+                <td>{{ monitor.group or 'Ungrouped' }}</td>
+                <td>{{ monitor.interval }}s</td>
+                <td>
+                    {% if monitor.enabled %}
+                    <span class="status-enabled">✓ Enabled</span>
+                    {% else %}
+                    <span class="status-disabled">✗ Disabled</span>
+                    {% endif %}
+                </td>
+                <td class="actions-cell">
+                    <a href="/monitors/edit/{{ loop.index0 }}" class="btn btn-small btn-edit">Edit</a>
+                    <a href="/monitors/delete/{{ loop.index0 }}" class="btn btn-small btn-delete" onclick="return confirm('Are you sure you want to delete {{ monitor.name }}?')">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<style>
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #2c3e50;
+}
+
+.page-header h1 {
+    margin: 0;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+}
+
+.btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.btn-edit {
+    background: #f39c12;
+    color: white;
+    margin-right: 0.5rem;
+}
+
+.btn-edit:hover {
+    background: #e67e22;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+}
+
+.table {
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table thead {
+    background: #2c3e50;
+    color: white;
+}
+
+.table th {
+    padding: 1rem;
+    text-align: left;
+    font-weight: 600;
+}
+
+.table td {
+    padding: 1rem;
+    border-bottom: 1px solid #ecf0f1;
+}
+
+.table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.disabled-row {
+    opacity: 0.6;
+}
+
+.target-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.actions-cell {
+    white-space: nowrap;
+}
+
+.status-enabled {
+    color: #27ae60;
+    font-weight: 600;
+}
+
+.status-disabled {
+    color: #95a5a6;
+    font-weight: 600;
+}
+</style>
+{% endblock %}
