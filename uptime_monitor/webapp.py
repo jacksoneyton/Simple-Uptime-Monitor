@@ -510,8 +510,14 @@ def monitor_add():
             # Save config
             _save_yaml_config(yaml_config)
 
+            # Hot reload monitors
+            from uptime_monitor.main import get_scheduler
+            scheduler = get_scheduler()
+            if scheduler:
+                scheduler.reload_monitors()
+
             logger.info(f"Added new monitor: {monitor_config['name']}")
-            return redirect(url_for('monitors_reload'))
+            return redirect(url_for('monitors_manage'))
             
         except Exception as e:
             logger.error(f"Error adding monitor: {e}")
@@ -552,8 +558,14 @@ def monitor_edit(monitor_index):
             monitors[monitor_index] = monitor_config
             _save_yaml_config(yaml_config)
 
+            # Hot reload monitors
+            from uptime_monitor.main import get_scheduler
+            scheduler = get_scheduler()
+            if scheduler:
+                scheduler.reload_monitors()
+
             logger.info(f"Updated monitor: {monitor_config['name']}")
-            return redirect(url_for('monitors_reload'))
+            return redirect(url_for('monitors_manage'))
         
         # GET request - show form with existing data
         return render_template('monitor_form.html',
@@ -580,8 +592,14 @@ def monitor_delete(monitor_index):
 
         _save_yaml_config(yaml_config)
 
+        # Hot reload monitors
+        from uptime_monitor.main import get_scheduler
+        scheduler = get_scheduler()
+        if scheduler:
+            scheduler.reload_monitors()
+
         logger.info(f"Deleted monitor: {deleted_name}")
-        return redirect(url_for('monitors_reload'))
+        return redirect(url_for('monitors_manage'))
         
     except Exception as e:
         logger.error(f"Error deleting monitor: {e}")

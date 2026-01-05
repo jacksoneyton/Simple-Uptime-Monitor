@@ -30,6 +30,11 @@ shutdown_event = Event()
 scheduler = None
 
 
+def get_scheduler():
+    """Get the global scheduler instance"""
+    return scheduler
+
+
 def signal_handler(signum, frame):
     """Handle shutdown signals"""
     logger.info(f"Received signal {signum}, shutting down...")

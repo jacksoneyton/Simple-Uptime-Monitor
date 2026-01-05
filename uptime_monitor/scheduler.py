@@ -191,6 +191,70 @@ class MonitorScheduler:
         self.executor.shutdown(wait=True)
         logger.info("Monitor scheduler stopped")
 
+    def reload_monitors(self) -> None:
+        """
+        Reload monitors from configuration without restarting the scheduler.
+
+        This allows hot-reloading of monitor configuration changes.
+        """
+        logger.info("Reloading monitor configuration...")
+
+        # Reload config from file
+        from uptime_monitor.config import load_config
+        self.config = load_config('config.yaml')
+
+        # Get current monitor names
+        old_monitor_names = set(self.monitors.keys())
+        new_monitor_names = set(m['name'] for m in self.config.monitors if m.get('enabled', True))
+
+        # Determine what changed
+        monitors_to_add = new_monitor_names - old_monitor_names
+        monitors_to_remove = old_monitor_names - new_monitor_names
+        monitors_to_update = old_monitor_names & new_monitor_names
+
+        # Remove deleted monitors
+        for monitor_name in monitors_to_remove:
+            logger.info(f"Removing monitor: {monitor_name}")
+            del self.monitors[monitor_name]
+            if monitor_name in self.monitor_last_run:
+                del self.monitor_last_run[monitor_name]
+
+        # Add new monitors
+        for monitor_config in self.config.monitors:
+            monitor_name = monitor_config['name']
+
+            if not monitor_config.get('enabled', True):
+                # Remove if it exists but is now disabled
+                if monitor_name in self.monitors:
+                    logger.info(f"Disabling monitor: {monitor_name}")
+                    del self.monitors[monitor_name]
+                continue
+
+            if monitor_name in monitors_to_add:
+                try:
+                    logger.info(f"Adding new monitor: {monitor_name}")
+                    monitor = self._create_monitor(monitor_config)
+                    self.monitors[monitor_name] = monitor
+                    self._sync_monitor_to_db(monitor_config)
+                except Exception as e:
+                    logger.error(f"Failed to add monitor '{monitor_name}': {e}")
+
+            elif monitor_name in monitors_to_update:
+                # Update existing monitor
+                try:
+                    logger.info(f"Updating monitor: {monitor_name}")
+                    monitor = self._create_monitor(monitor_config)
+                    self.monitors[monitor_name] = monitor
+                    self._sync_monitor_to_db(monitor_config)
+                except Exception as e:
+                    logger.error(f"Failed to update monitor '{monitor_name}': {e}")
+
+        # Reload notifiers as well
+        self.notifiers.clear()
+        self._load_notifiers()
+
+        logger.info(f"Configuration reloaded: {len(self.monitors)} monitors active")
+
     def _run_loop(self) -> None:
         """Main scheduler loop"""
         logger.info("Scheduler loop starting...")
@@ -273,7 +337,7 @@ class MonitorScheduler:
                 response_time=result.response_time,
                 status_code=result.status_code,
                 error_message=result.error_message,
-                metadata=result.metadata
+                check_metadata=result.metadata
             )
 
             session.add(check_result)
