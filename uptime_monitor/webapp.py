@@ -87,6 +87,12 @@ def dashboard():
         down_count = sum(1 for m in monitor_statuses.values() if m['status'] == 'down')
         overall_uptime = (up_count / total_monitors * 100) if total_monitors > 0 else 0
 
+        # Include groups from monitors that aren't in the config groups section
+        actual_groups = set(m['group'] for m in monitor_statuses.values() if m['group'] != 'Ungrouped')
+        for group in actual_groups:
+            if group not in group_order:
+                group_order.append(group)
+
         return render_template('dashboard.html',
                              monitor_statuses=monitor_statuses,
                              group_order=group_order,
