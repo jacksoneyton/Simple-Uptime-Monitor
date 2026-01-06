@@ -217,41 +217,51 @@ document.addEventListener('DOMContentLoaded', function() {
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #2c3e50;
+    border-bottom: 2px solid #00ffff;
+}
+
+.page-header h1 {
+    color: #00ffff;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    letter-spacing: 2px;
 }
 
 .btn-secondary {
-    background: #95a5a6;
-    color: white;
+    background: rgba(108, 117, 125, 0.3);
+    border-color: #6c757d;
+    color: #e0e0e0;
 }
 
 .btn-secondary:hover {
-    background: #7f8c8d;
+    background: rgba(108, 117, 125, 0.5);
+    box-shadow: 0 0 15px rgba(108, 117, 125, 0.5);
 }
 
 .alert {
     padding: 1rem;
     border-radius: 4px;
     margin-bottom: 1.5rem;
+    border: 1px solid;
 }
 
 .alert-error {
-    background: #fee;
-    color: #c00;
-    border: 1px solid #fcc;
+    background: rgba(255, 0, 128, 0.2);
+    border-color: #ff0080;
+    color: #ff6bb5;
 }
 
 .monitor-form {
-    background: white;
+    background: rgba(26, 26, 46, 0.8);
     padding: 2rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
 }
 
 .form-section {
     margin-bottom: 2rem;
     padding-bottom: 2rem;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
 }
 
 .form-section:last-of-type {
@@ -261,8 +271,10 @@ document.addEventListener('DOMContentLoaded', function() {
 .form-section h2 {
     margin-top: 0;
     margin-bottom: 1.5rem;
-    color: #2c3e50;
+    color: #a855f7;
     font-size: 1.3rem;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+    letter-spacing: 1px;
 }
 
 .form-group {
@@ -273,7 +285,10 @@ document.addEventListener('DOMContentLoaded', function() {
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: #00ffff;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
 }
 
 .form-group input[type="text"],
@@ -282,21 +297,31 @@ document.addEventListener('DOMContentLoaded', function() {
 .form-group select {
     width: 100%;
     padding: 0.6rem;
-    border: 1px solid #ddd;
+    border: 1px solid #00ffff;
     border-radius: 4px;
     font-size: 1rem;
+    background: rgba(10, 14, 26, 0.6);
+    color: #e0e0e0;
+    font-family: 'Courier New', monospace;
+    transition: all 0.3s ease;
+}
+
+.form-group input[type="checkbox"] {
+    width: auto;
+    accent-color: #00ffff;
 }
 
 .form-group input:focus,
 .form-group select:focus {
     outline: none;
-    border-color: #3498db;
+    border-color: #00ff88;
+    box-shadow: 0 0 15px rgba(0, 255, 136, 0.3);
 }
 
 .form-group small {
     display: block;
     margin-top: 0.25rem;
-    color: #7f8c8d;
+    color: #a0a0a0;
     font-size: 0.85rem;
 }
 
@@ -314,8 +339,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .config-section {
     padding: 1rem;
-    background: #f8f9fa;
+    background: rgba(10, 14, 26, 0.6);
+    border: 1px solid rgba(0, 255, 255, 0.2);
     border-radius: 4px;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+        flex-direction: column;
+    }
 }
 </style>
 {% endblock %}

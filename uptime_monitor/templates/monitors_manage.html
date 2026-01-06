@@ -8,8 +8,8 @@
     <a href="/monitors/add" class="btn btn-primary">+ Add New Monitor</a>
 </div>
 
-<div class="monitors-table">
-    <table class="table">
+<div class="monitors-table-container">
+    <table class="monitors-table">
         <thead>
             <tr>
                 <th>Name</th>
@@ -24,11 +24,11 @@
         <tbody>
             {% for monitor in monitors %}
             <tr class="{% if not monitor.enabled %}disabled-row{% endif %}">
-                <td><strong>{{ monitor.name }}</strong></td>
-                <td><span class="badge-type">{{ monitor.type|upper }}</span></td>
+                <td><strong class="monitor-name">{{ monitor.name }}</strong></td>
+                <td><span class="type-badge type-{{ monitor.type }}">{{ monitor.type|upper }}</span></td>
                 <td class="target-cell">{{ monitor.target }}</td>
-                <td>{{ monitor.group or 'Ungrouped' }}</td>
-                <td>{{ monitor.interval }}s</td>
+                <td class="group-cell">{{ monitor.group or 'Ungrouped' }}</td>
+                <td class="interval-cell">{{ monitor.interval }}s</td>
                 <td>
                     {% if monitor.enabled %}
                     <span class="status-enabled">✓ Enabled</span>
@@ -37,8 +37,8 @@
                     {% endif %}
                 </td>
                 <td class="actions-cell">
-                    <a href="/monitors/edit/{{ loop.index0 }}" class="btn btn-small btn-edit">Edit</a>
-                    <a href="/monitors/delete/{{ loop.index0 }}" class="btn btn-small btn-delete" onclick="return confirm('Are you sure you want to delete {{ monitor.name }}?')">Delete</a>
+                    <a href="/monitors/edit/{{ loop.index0 }}" class="btn btn-small btn-edit">EDIT</a>
+                    <a href="/monitors/delete/{{ loop.index0 }}" class="btn btn-small btn-delete" onclick="return confirm('Are you sure you want to delete {{ monitor.name }}?')">DELETE</a>
                 </td>
             </tr>
             {% endfor %}
@@ -53,91 +53,137 @@
     align-items: center;
     margin-bottom: 2rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #2c3e50;
+    border-bottom: 2px solid #00ffff;
 }
 
 .page-header h1 {
     margin: 0;
+    color: #00ffff;
+    text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    font-size: 2rem;
+    letter-spacing: 2px;
 }
 
-.btn {
-    display: inline-block;
-    padding: 0.6rem 1.2rem;
-    border-radius: 4px;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.2s;
-}
-
-.btn-primary {
-    background: #3498db;
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #2980b9;
-}
-
-.btn-small {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.85rem;
-}
-
-.btn-edit {
-    background: #f39c12;
-    color: white;
-    margin-right: 0.5rem;
-}
-
-.btn-edit:hover {
-    background: #e67e22;
-}
-
-.btn-delete {
-    background: #e74c3c;
-    color: white;
-}
-
-.btn-delete:hover {
-    background: #c0392b;
-}
-
-.table {
-    width: 100%;
-    background: white;
+.monitors-table-container {
+    background: rgba(26, 26, 46, 0.8);
     border-radius: 8px;
     overflow: hidden;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #00ffff;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
 }
 
-.table thead {
-    background: #2c3e50;
-    color: white;
+.monitors-table {
+    width: 100%;
+    border-collapse: collapse;
 }
 
-.table th {
+.monitors-table thead {
+    background: rgba(0, 255, 255, 0.1);
+}
+
+.monitors-table th {
     padding: 1rem;
     text-align: left;
-    font-weight: 600;
+    font-weight: 700;
+    color: #00ffff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 2px solid #00ffff;
+    font-size: 0.9rem;
 }
 
-.table td {
+.monitors-table td {
     padding: 1rem;
-    border-bottom: 1px solid #ecf0f1;
+    border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    color: #e0e0e0;
 }
 
-.table tbody tr:hover {
-    background: #f8f9fa;
+.monitors-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.monitors-table tbody tr:hover {
+    background: rgba(0, 255, 255, 0.05);
+    box-shadow: inset 0 0 20px rgba(0, 255, 255, 0.1);
+}
+
+.monitors-table tbody tr:last-child td {
+    border-bottom: none;
 }
 
 .disabled-row {
-    opacity: 0.6;
+    opacity: 0.5;
+}
+
+.disabled-row:hover {
+    opacity: 0.7;
+}
+
+.monitor-name {
+    color: #00ffff;
+    font-weight: 700;
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.type-badge.type-http {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid #3b82f6;
+    color: #3b82f6;
+}
+
+.type-badge.type-tcp {
+    background: rgba(168, 85, 247, 0.2);
+    border: 1px solid #a855f7;
+    color: #a855f7;
+}
+
+.type-badge.type-ping {
+    background: rgba(0, 255, 136, 0.2);
+    border: 1px solid #00ff88;
+    color: #00ff88;
+}
+
+.type-badge.type-dns {
+    background: rgba(255, 193, 7, 0.2);
+    border: 1px solid #ffc107;
+    color: #ffc107;
+}
+
+.type-badge.type-websocket {
+    background: rgba(236, 72, 153, 0.2);
+    border: 1px solid #ec4899;
+    color: #ec4899;
+}
+
+.type-badge.type-docker {
+    background: rgba(14, 165, 233, 0.2);
+    border: 1px solid #0ea5e9;
+    color: #0ea5e9;
 }
 
 .target-cell {
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
-    color: #555;
+    font-size: 0.85rem;
+    color: #a0a0a0;
+}
+
+.group-cell {
+    color: #a855f7;
+    font-weight: 600;
+}
+
+.interval-cell {
+    color: #00ffff;
+    font-weight: 600;
 }
 
 .actions-cell {
@@ -145,13 +191,88 @@
 }
 
 .status-enabled {
-    color: #27ae60;
-    font-weight: 600;
+    color: #00ff88;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
 }
 
 .status-disabled {
-    color: #95a5a6;
+    color: #6c757d;
     font-weight: 600;
+}
+
+.btn-small {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    border-color: #f39c12;
+    color: #000;
+    box-shadow: 0 0 15px rgba(243, 156, 18, 0.3);
+    margin-right: 0.5rem;
+}
+
+.btn-edit:hover {
+    box-shadow: 0 0 25px rgba(243, 156, 18, 0.6);
+    transform: translateY(-2px);
+}
+
+.btn-delete {
+    background: linear-gradient(135deg, #ff0080 0%, #cc0066 100%);
+    border-color: #ff0080;
+    color: white;
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.3);
+}
+
+.btn-delete:hover {
+    box-shadow: 0 0 25px rgba(255, 0, 128, 0.6);
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 968px) {
+    .monitors-table {
+        font-size: 0.85rem;
+    }
+
+    .monitors-table th,
+    .monitors-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+
+    .page-header h1 {
+        font-size: 1.5rem;
+        text-align: center;
+    }
+
+    .monitors-table-container {
+        overflow-x: auto;
+    }
+
+    .monitors-table {
+        font-size: 0.75rem;
+    }
+
+    .monitors-table th,
+    .monitors-table td {
+        padding: 0.5rem;
+    }
+
+    .btn-small {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.7rem;
+    }
 }
 </style>
 {% endblock %}

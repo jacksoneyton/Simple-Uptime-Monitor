@@ -77,6 +77,9 @@ def main():
         scheduler = MonitorScheduler(max_workers=10)
         scheduler.start()
 
+        # Store scheduler reference in Flask app for access from routes
+        app.config['SCHEDULER'] = scheduler
+
         # Get web server configuration
         web_config = config.get_web_config()
         host = web_config['host']

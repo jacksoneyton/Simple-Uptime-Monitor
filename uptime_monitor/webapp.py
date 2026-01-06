@@ -517,10 +517,17 @@ def monitor_add():
             _save_yaml_config(yaml_config)
 
             # Hot reload monitors
-            from uptime_monitor.main import get_scheduler
-            scheduler = get_scheduler()
-            if scheduler:
-                scheduler.reload_monitors()
+            try:
+                scheduler = app.config.get('SCHEDULER')
+                logger.info(f"Got scheduler from app.config: {scheduler}")
+                if scheduler:
+                    logger.info("Calling scheduler.reload_monitors()...")
+                    scheduler.reload_monitors()
+                    logger.info("Scheduler reload completed")
+                else:
+                    logger.warning("Scheduler is None, cannot reload")
+            except Exception as e:
+                logger.error(f"Error reloading monitors: {e}", exc_info=True)
 
             logger.info(f"Added new monitor: {monitor_config['name']}")
             return redirect(url_for('monitors_manage'))
@@ -565,10 +572,17 @@ def monitor_edit(monitor_index):
             _save_yaml_config(yaml_config)
 
             # Hot reload monitors
-            from uptime_monitor.main import get_scheduler
-            scheduler = get_scheduler()
-            if scheduler:
-                scheduler.reload_monitors()
+            try:
+                scheduler = app.config.get('SCHEDULER')
+                logger.info(f"Got scheduler from app.config: {scheduler}")
+                if scheduler:
+                    logger.info("Calling scheduler.reload_monitors()...")
+                    scheduler.reload_monitors()
+                    logger.info("Scheduler reload completed")
+                else:
+                    logger.warning("Scheduler is None, cannot reload")
+            except Exception as e:
+                logger.error(f"Error reloading monitors: {e}", exc_info=True)
 
             logger.info(f"Updated monitor: {monitor_config['name']}")
             return redirect(url_for('monitors_manage'))
@@ -599,10 +613,17 @@ def monitor_delete(monitor_index):
         _save_yaml_config(yaml_config)
 
         # Hot reload monitors
-        from uptime_monitor.main import get_scheduler
-        scheduler = get_scheduler()
-        if scheduler:
-            scheduler.reload_monitors()
+        try:
+            scheduler = app.config.get('SCHEDULER')
+            logger.info(f"Got scheduler from app.config: {scheduler}")
+            if scheduler:
+                logger.info("Calling scheduler.reload_monitors()...")
+                scheduler.reload_monitors()
+                logger.info("Scheduler reload completed")
+            else:
+                logger.warning("Scheduler is None, cannot reload")
+        except Exception as e:
+            logger.error(f"Error reloading monitors: {e}", exc_info=True)
 
         logger.info(f"Deleted monitor: {deleted_name}")
         return redirect(url_for('monitors_manage'))
