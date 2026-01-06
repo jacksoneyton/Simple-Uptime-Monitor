@@ -144,61 +144,134 @@
 
 {% block extra_scripts %}
 <script>
-// Load chart data and render
-fetch('/api/monitor/{{ monitor.id }}/history?hours=24')
-    .then(response => response.json())
-    .then(data => {
-        const ctx = document.getElementById('responseTimeChart');
-        const labels = data.data_points.map(p => new Date(p.timestamp).toLocaleTimeString());
-        const values = data.data_points.map(p => p.response_time || 0);
-        const statuses = data.data_points.map(p => p.status);
+let chart = null;
+const monitorId = {{ monitor.id }};
 
-        // Color points based on status
-        const pointColors = statuses.map(s => {
-            if (s === 'up') return 'rgba(40, 167, 69, 0.8)';
-            if (s === 'down') return 'rgba(220, 53, 69, 0.8)';
-            return 'rgba(108, 117, 125, 0.8)';
-        });
+// Format time ago
+function timeAgo(timestamp) {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const seconds = Math.floor((now - then) / 1000);
 
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Response Time (ms)',
-                    data: values,
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderWidth: 2,
-                    pointBackgroundColor: pointColors,
-                    pointRadius: 3,
-                    tension: 0.1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Response Time (ms)'
-                        }
+    if (seconds < 60) return `${seconds}s ago`;
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+// Load and update chart
+function loadChart() {
+    fetch(`/api/monitor/${monitorId}/history?hours=24`)
+        .then(response => response.json())
+        .then(data => {
+            const ctx = document.getElementById('responseTimeChart');
+            const labels = data.data_points.map(p => new Date(p.timestamp).toLocaleTimeString());
+            const values = data.data_points.map(p => p.response_time || 0);
+            const statuses = data.data_points.map(p => p.status);
+
+            // Color points based on status
+            const pointColors = statuses.map(s => {
+                if (s === 'up') return 'rgba(40, 167, 69, 0.8)';
+                if (s === 'down') return 'rgba(220, 53, 69, 0.8)';
+                return 'rgba(108, 117, 125, 0.8)';
+            });
+
+            if (chart) {
+                // Update existing chart
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = values;
+                chart.data.datasets[0].pointBackgroundColor = pointColors;
+                chart.update('none'); // Update without animation
+            } else {
+                // Create new chart
+                chart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Response Time (ms)',
+                            data: values,
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderWidth: 2,
+                            pointBackgroundColor: pointColors,
+                            pointRadius: 3,
+                            tension: 0.1
+                        }]
                     },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Time'
-                        },
-                        ticks: {
-                            maxTicksLimit: 12
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Response Time (ms)'
+                                }
+                            },
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                },
+                                ticks: {
+                                    maxTicksLimit: 12
+                                }
+                            }
                         }
                     }
-                }
+                });
             }
-        });
-    })
-    .catch(err => console.error('Failed to load chart data:', err));
+        })
+        .catch(err => console.error('Failed to load chart data:', err));
+}
+
+// Update live stats
+function updateStats() {
+    fetch('/api/status')
+        .then(response => response.json())
+        .then(data => {
+            const monitor = data.monitors.find(m => m.id === monitorId);
+            if (!monitor) return;
+
+            // Update status badges
+            const statusElements = document.querySelectorAll('.status-badge');
+            statusElements.forEach(el => {
+                el.className = `status-badge status-${monitor.status}` + (el.classList.contains('large') ? ' large' : '');
+                el.textContent = monitor.status.toUpperCase();
+            });
+
+            // Update current status box
+            const statusValue = document.querySelector('.detail-stats .stat-box:nth-child(1) .stat-value');
+            if (statusValue) statusValue.textContent = monitor.status.toUpperCase();
+
+            const statusMeta = document.querySelector('.detail-stats .stat-box:nth-child(1) .stat-meta');
+            if (statusMeta && monitor.last_checked) {
+                statusMeta.textContent = `Last checked ${timeAgo(monitor.last_checked)}`;
+            }
+
+            // Update response time
+            const responseTimeValue = document.querySelector('.detail-stats .stat-box:nth-child(2) .stat-value');
+            if (responseTimeValue && monitor.response_time) {
+                responseTimeValue.textContent = `${Math.round(monitor.response_time)}ms`;
+            }
+
+            // Reload chart periodically (every 30 seconds)
+            const now = Date.now();
+            if (!updateStats.lastChartUpdate || now - updateStats.lastChartUpdate > 30000) {
+                loadChart();
+                updateStats.lastChartUpdate = now;
+            }
+        })
+        .catch(err => console.error('Failed to update stats:', err));
+}
+
+// Initial load
+loadChart();
+
+// Auto-refresh every 5 seconds
+setInterval(updateStats, 5000);
+updateStats(); // Initial update
 </script>
 {% endblock %}
