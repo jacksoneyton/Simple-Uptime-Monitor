@@ -12,11 +12,15 @@ A simple, YAML-configured uptime monitoring system with a web dashboard - inspir
 - **Systemd Service**: Runs as a background service on Linux
 - **SSL Certificate Monitoring**: Automatic SSL expiration alerts
 - **Incident Tracking**: Automatic downtime incident management
-- **Simple Installation**: Single installation script for WSL Ubuntu
+- **Multi-Platform**: WSL, Ubuntu/Debian, and Docker support
+- **Web UI Management**: Add, edit, and delete monitors via web interface
+- **Cyberpunk Theme**: Dark, neon-glowing aesthetic with real-time updates
 
 ## Quick Start
 
 ### 1. Installation
+
+The installer supports **WSL**, **Ubuntu/Debian**, and **Docker**:
 
 ```bash
 cd /home/jack/Simple-Uptime-Monitor
@@ -24,11 +28,12 @@ bash install/install.sh
 ```
 
 The installer will:
+- Auto-detect your environment (WSL/Docker/Linux)
 - Create a Python virtual environment
 - Install all dependencies
 - Initialize the SQLite database
 - Create configuration templates
-- Install the systemd service
+- Install systemd service (if available)
 
 ### 2. Configuration
 
@@ -189,3 +194,89 @@ For issues and feature requests, please create an issue in the project repositor
 ---
 
 **Simple Uptime Monitor** - Monitor your services with simplicity.
+
+## Deployment Options
+
+### Ubuntu/Debian (with systemd)
+```bash
+# Install
+bash install/install.sh
+
+# Start service
+sudo systemctl start Simple-Uptime-Monitor
+sudo systemctl enable Simple-Uptime-Monitor
+
+# Check status
+sudo systemctl status Simple-Uptime-Monitor
+
+# View logs
+sudo journalctl -u Simple-Uptime-Monitor -f
+```
+
+### WSL (Windows Subsystem for Linux)
+
+**Option 1: With systemd (recommended)**
+```bash
+# Enable systemd in WSL
+sudo nano /etc/wsl.conf
+# Add:
+# [boot]
+# systemd=true
+
+# Restart WSL from PowerShell
+wsl.exe --shutdown
+
+# Then use systemctl commands as above
+```
+
+**Option 2: Manual mode**
+```bash
+cd /home/jack/Simple-Uptime-Monitor
+source venv/bin/activate
+python -m uptime_monitor.main
+```
+
+### Docker
+
+```bash
+# Build the image
+docker build -t simple-uptime-monitor .
+
+# Run with persistent data
+docker run -d \
+  --name uptime-monitor \
+  -p 5000:5000 \
+  -v $(pwd)/config.yaml:/opt/Simple-Uptime-Monitor/config.yaml \
+  -v $(pwd)/data:/opt/Simple-Uptime-Monitor/data \
+  simple-uptime-monitor
+
+# View logs
+docker logs -f uptime-monitor
+```
+
+## Uninstallation
+
+```bash
+bash install/uninstall.sh
+```
+
+The uninstaller provides options to:
+1. **Remove everything** - Service, venv, database, config, logs
+2. **Remove service only** - Keep data and config for reinstall
+3. **Remove service + venv** - Keep database and config
+4. **Cancel** - Exit without changes
+
+## Web Interface
+
+After installation, access the web dashboard at:
+- **URL**: http://localhost:5000
+- **Manage Monitors**: http://localhost:5000/monitors/manage
+
+Features:
+- Real-time status updates (5-second polling)
+- Add/edit/delete monitors via web UI
+- Response time graphs (Chart.js)
+- Incident tracking with history
+- Grouped monitor display
+- Hot-reload configuration (no restart needed)
+
