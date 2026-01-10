@@ -78,7 +78,7 @@ fi
 
 # Install systemd service (if systemd is available)
 echo "Installing systemd service..."
-if command -v systemctl &> /dev/null && systemctl --version &> /dev/null; then
+if command -v systemctl &> /dev/null && systemctl is-system-running &> /dev/null 2>&1; then
     sudo cp "$INSTALL_DIR/install/$SERVICE_NAME" "/etc/systemd/system/$SERVICE_NAME"
     sudo systemctl daemon-reload
     echo "Systemd service installed successfully!"
