@@ -1,5 +1,6 @@
 #!/bin/bash
-# Installation script for Simple Uptime Monitor on WSL Ubuntu
+# Installation script for Simple Uptime Monitor
+# Compatible with: WSL, Ubuntu, Docker containers
 
 set -e  # Exit on error
 
@@ -13,16 +14,17 @@ cd "$INSTALL_DIR"
 echo "========================================="
 echo "Simple Uptime Monitor Installation"
 echo "========================================="
+echo ""
 
-# Check if running on WSL
-if ! grep -qi microsoft /proc/version; then
-    echo "Warning: This script is designed for WSL Ubuntu"
-    read -p "Continue anyway? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        exit 1
-    fi
+# Detect environment
+if grep -qi microsoft /proc/version; then
+    echo "Detected: WSL (Windows Subsystem for Linux)"
+elif [ -f /.dockerenv ]; then
+    echo "Detected: Docker container"
+else
+    echo "Detected: Linux system"
 fi
+echo ""
 
 # Check Python version
 echo "Checking Python version..."
@@ -107,16 +109,24 @@ if [ "$SYSTEMD_AVAILABLE" = true ]; then
     echo "  6. View logs:"
     echo "     sudo journalctl -u Simple-Uptime-Monitor -f"
 else
-    echo "  3. Enable systemd in WSL2 (recommended):"
-    echo "     Add to /etc/wsl.conf:"
-    echo "     [boot]"
-    echo "     systemd=true"
-    echo "     Then restart WSL: wsl.exe --shutdown"
+    echo "  3. Running without systemd:"
     echo ""
-    echo "  OR run manually:"
-    echo "     cd $INSTALL_DIR"
-    echo "     source venv/bin/activate"
-    echo "     python -m uptime_monitor.main"
+    if grep -qi microsoft /proc/version; then
+        echo "     WSL: Enable systemd (recommended):"
+        echo "       Add to /etc/wsl.conf:"
+        echo "       [boot]"
+        echo "       systemd=true"
+        echo "       Then restart WSL: wsl.exe --shutdown"
+        echo ""
+    fi
+    echo "     OR run manually:"
+    echo "       cd $INSTALL_DIR"
+    echo "       source venv/bin/activate"
+    echo "       python -m uptime_monitor.main"
+    echo ""
+    if [ -f /.dockerenv ]; then
+        echo "     Docker: Use the manual command as your ENTRYPOINT/CMD"
+    fi
 fi
 
 echo ""
