@@ -49,9 +49,13 @@ pip install -r "$INSTALL_DIR/requirements.txt"
 echo "Installing uptime_monitor package..."
 pip install -e "$INSTALL_DIR"
 
-# Create data directory
+# Create data directory FIRST (before database init)
 echo "Creating data directory..."
 mkdir -p "$INSTALL_DIR/data"
+
+# Initialize database (now that data directory exists)
+echo "Initializing database..."
+python3 -m uptime_monitor.database --init data/uptime.db
 
 # Copy example config if needed
 if [ ! -f "$INSTALL_DIR/config.yaml" ]; then
@@ -66,10 +70,6 @@ if [ ! -f "$INSTALL_DIR/.env" ]; then
     cp "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
     echo ".env file created - EDIT THIS FILE to add your secrets!"
 fi
-
-# Initialize database
-echo "Initializing database..."
-python3 -m uptime_monitor.database --init data/uptime.db
 
 # Install systemd service
 echo "Installing systemd service..."
