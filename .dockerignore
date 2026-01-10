@@ -10,15 +10,15 @@ env/
 dist/
 build/
 
-# Database
+# Data directory (will be mounted as volume)
 data/
 *.db
 *.db-shm
 *.db-wal
 
-# Config files are mounted as volumes, not copied
-# config.yaml - will be created from config.default.yaml in Dockerfile
-# .env - mounted as volume
+# User configuration (defaults will be used in container)
+config.yaml
+.env
 
 # Git
 .git/
@@ -50,3 +50,6 @@ screenshots/
 
 # Claude
 .claude/
+
+# Install scripts (not needed in container)
+install/

@@ -17,22 +17,29 @@ A simple, Docker-based uptime monitoring system with a web dashboard - inspired 
 
 ## Quick Start (Docker)
 
-### 1. Clone the repository
+### Option 1: Docker Compose (Recommended)
 
 ```bash
-git clone https://github.com/jacksoneyton/Simple-Uptime-Monitor.git
-cd Simple-Uptime-Monitor
+mkdir simple-uptime-monitor
+cd simple-uptime-monitor
+curl -o docker-compose.yml https://raw.githubusercontent.com/jacksoneyton/Simple-Uptime-Monitor/main/docker-compose.yml
+docker compose up -d
 ```
 
-### 2. Start with Docker Compose
+### Option 2: Docker Run
 
 ```bash
-docker-compose up -d
+docker run -d \
+  --restart=unless-stopped \
+  -p 5000:5000 \
+  -v uptime-monitor:/app/data \
+  --name simple-uptime-monitor \
+  ghcr.io/jacksoneyton/simple-uptime-monitor:latest
 ```
 
 That's it! The service is now running at **http://localhost:5000**
 
-### 3. Add Monitors
+### Add Monitors
 
 Navigate to **http://localhost:5000/monitors/manage** and click "Add New Monitor"
 

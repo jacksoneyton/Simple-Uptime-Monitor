@@ -28,7 +28,10 @@
       "Bash(sudo grep:*)",
       "Bash(git rm:*)",
       "Bash(bash -n:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker compose up:*)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

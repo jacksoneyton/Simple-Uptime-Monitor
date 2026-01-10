@@ -8,8 +8,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Create installation directory
-WORKDIR /opt/Simple-Uptime-Monitor
+# Create application directory
+WORKDIR /app
 
 # Copy project files
 COPY . .
@@ -21,18 +21,38 @@ RUN python3 -m venv venv && \
     pip install -r requirements.txt && \
     pip install -e .
 
-# Create data directory
-RUN mkdir -p data
-
-# Initialize database
-RUN . venv/bin/activate && \
-    python3 -m uptime_monitor.database --init /opt/Simple-Uptime-Monitor/data/uptime.db
-
-# Copy default config (minimal working configuration)
-RUN if [ ! -f config.yaml ]; then cp config.default.yaml config.yaml; fi
+# Copy default configuration files
+RUN cp config.default.yaml config.yaml && \
+    touch .env
 
 # Expose web dashboard port
 EXPOSE 5000
 
-# Run the application (foreground for Docker)
-CMD ["venv/bin/python", "-m", "uptime_monitor.main"]
+# Create startup script
+RUN echo '#!/bin/bash\n\
+cd /app\n\
+\n\
+# Use data from mounted volume if it exists, otherwise use local\n\
+if [ -d "/app/data" ]; then\n\
+    DATA_DIR="/app/data"\n\
+else\n\
+    DATA_DIR="/app/local-data"\n\
+    mkdir -p "$DATA_DIR"\n\
+fi\n\
+\n\
+# Initialize database if it does not exist\n\
+if [ ! -f "$DATA_DIR/uptime.db" ]; then\n\
+    . venv/bin/activate\n\
+    python3 -m uptime_monitor.database --init "$DATA_DIR/uptime.db"\n\
+fi\n\
+\n\
+# Update config to use the correct database path\n\
+sed -i "s|database:.*|database: \"$DATA_DIR/uptime.db\"|" config.yaml\n\
+\n\
+# Start the application\n\
+. venv/bin/activate\n\
+exec python -m uptime_monitor.main\n\
+' > /app/start.sh && chmod +x /app/start.sh
+
+# Run the application
+CMD ["/app/start.sh"]

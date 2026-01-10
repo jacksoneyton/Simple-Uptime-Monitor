@@ -1,22 +1,11 @@
-version: '3.8'
-
 services:
   uptime-monitor:
     build: .
     container_name: simple-uptime-monitor
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
     ports:
       - "5000:5000"
-    volumes:
-      # Persist database and configuration
-      - ./data:/opt/Simple-Uptime-Monitor/data
-      - ./config.yaml:/opt/Simple-Uptime-Monitor/config.yaml
-      - ./.env:/opt/Simple-Uptime-Monitor/.env
     environment:
       - TZ=America/New_York
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
