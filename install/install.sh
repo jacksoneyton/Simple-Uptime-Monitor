@@ -122,35 +122,58 @@ else
     echo ""
 
     if [ -f /.dockerenv ]; then
-        echo "=== DOCKER AUTO-START ==="
-        echo "To auto-start in Docker, use this Dockerfile CMD:"
-        echo "  CMD [\"bash\", \"/home/jack/Simple-Uptime-Monitor/install/start.sh\"]"
+        echo "=== DOCKER DEPLOYMENT ==="
+        echo "Service will auto-start via Dockerfile CMD"
+        echo "No additional configuration needed"
         echo ""
     elif grep -qi microsoft /proc/version; then
-        echo "=== WSL AUTO-START OPTIONS ==="
+        echo "=== WSL AUTO-START SETUP ==="
         echo ""
-        echo "Option 1: Enable systemd in WSL (recommended)"
-        echo "  1. Edit /etc/wsl.conf:"
-        echo "       sudo nano /etc/wsl.conf"
-        echo "  2. Add these lines:"
-        echo "       [boot]"
-        echo "       systemd=true"
-        echo "  3. Restart WSL from PowerShell:"
-        echo "       wsl.exe --shutdown"
-        echo "  4. Re-run installer to set up systemd service"
+        echo "Configuring auto-start on WSL boot..."
+
+        # Create or update /etc/wsl.conf
+        WSL_CONF="/etc/wsl.conf"
+        BOOT_COMMAND="command=\"bash $INSTALL_DIR/install/start.sh\""
+
+        # Check if wsl.conf exists
+        if [ -f "$WSL_CONF" ]; then
+            # Check if [boot] section exists
+            if grep -q "^\[boot\]" "$WSL_CONF"; then
+                # Check if command already exists
+                if grep -q "^command=" "$WSL_CONF"; then
+                    echo "⚠ Boot command already exists in $WSL_CONF"
+                    echo "  Please manually verify it starts the uptime monitor"
+                else
+                    # Add command to existing [boot] section
+                    sudo sed -i "/^\[boot\]/a $BOOT_COMMAND" "$WSL_CONF"
+                    echo "✓ Added boot command to existing [boot] section"
+                fi
+            else
+                # Add new [boot] section
+                echo "" | sudo tee -a "$WSL_CONF" > /dev/null
+                echo "[boot]" | sudo tee -a "$WSL_CONF" > /dev/null
+                echo "$BOOT_COMMAND" | sudo tee -a "$WSL_CONF" > /dev/null
+                echo "✓ Created [boot] section with auto-start command"
+            fi
+        else
+            # Create new wsl.conf
+            echo "[boot]" | sudo tee "$WSL_CONF" > /dev/null
+            echo "$BOOT_COMMAND" | sudo tee -a "$WSL_CONF" > /dev/null
+            echo "✓ Created $WSL_CONF with auto-start command"
+        fi
+
         echo ""
-        echo "Option 2: WSL boot command (requires WSL 0.67.6+)"
-        echo "  1. Edit /etc/wsl.conf:"
-        echo "       sudo nano /etc/wsl.conf"
-        echo "  2. Add these lines:"
-        echo "       [boot]"
-        echo "       command=\"bash $INSTALL_DIR/install/start.sh\""
-        echo "  3. Restart WSL from PowerShell:"
-        echo "       wsl.exe --shutdown"
+        echo "✓ Auto-start configured!"
+        echo "  The service will start automatically when WSL boots"
         echo ""
-        echo "Option 3: Windows Task Scheduler"
-        echo "  Create a task that runs on login:"
-        echo "    wsl.exe -d <distro> -u <user> bash $INSTALL_DIR/install/start.sh"
+        echo "NOTE: Restart WSL from PowerShell to apply changes:"
+        echo "  wsl.exe --shutdown"
+        echo ""
+        echo "Alternative: Enable systemd for better service management"
+        echo "  Add to $WSL_CONF:"
+        echo "    [boot]"
+        echo "    systemd=true"
+        echo "  Then restart WSL and re-run this installer"
         echo ""
     fi
 fi
