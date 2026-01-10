@@ -35,6 +35,45 @@ if ! python3 -c "import sys; exit(0 if sys.version_info >= (3, 8) else 1)"; then
 fi
 echo "Python version OK: $PYTHON_VERSION"
 
+# Check if venv module is available
+echo "Checking for python3-venv..."
+if ! python3 -m venv --help &> /dev/null; then
+    echo "⚠ python3-venv is not installed"
+    echo ""
+
+    # Detect package manager and offer to install
+    if command -v apt &> /dev/null; then
+        echo "Detected: Debian/Ubuntu-based system"
+        echo "Installing python3-venv..."
+        sudo apt update && sudo apt install -y python3-venv
+    elif command -v dnf &> /dev/null; then
+        echo "Detected: Fedora/RHEL-based system"
+        echo "Installing python3-venv..."
+        sudo dnf install -y python3-virtualenv
+    elif command -v yum &> /dev/null; then
+        echo "Detected: CentOS/RHEL-based system"
+        echo "Installing python3-venv..."
+        sudo yum install -y python3-virtualenv
+    elif command -v pacman &> /dev/null; then
+        echo "Detected: Arch-based system"
+        echo "python3 on Arch includes venv by default"
+        echo "If this fails, try: sudo pacman -S python-virtualenv"
+    else
+        echo "Could not detect package manager"
+        echo "Please install python3-venv manually and re-run this script"
+        exit 1
+    fi
+
+    # Verify installation
+    if ! python3 -m venv --help &> /dev/null; then
+        echo "Failed to install python3-venv"
+        echo "Please install it manually and re-run this script"
+        exit 1
+    fi
+    echo "✓ python3-venv installed successfully"
+fi
+echo "✓ python3-venv is available"
+
 # Create virtual environment
 echo "Creating virtual environment..."
 if [ ! -d "$VENV_DIR" ]; then
