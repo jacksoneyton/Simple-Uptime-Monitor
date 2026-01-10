@@ -22,7 +22,7 @@ A simple, Docker-based uptime monitoring system with a web dashboard - inspired 
 ```bash
 mkdir simple-uptime-monitor
 cd simple-uptime-monitor
-curl -o docker-compose.yml https://raw.githubusercontent.com/jacksoneyton/Simple-Uptime-Monitor/main/docker-compose.yml
+curl -o compose.yaml https://raw.githubusercontent.com/jacksoneyton/Simple-Uptime-Monitor/main/compose.yaml
 docker compose up -d
 ```
 
@@ -103,22 +103,22 @@ Configure notification channels in `config.yaml` or via the web UI.
 
 ```bash
 # Start the service
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Stop the service
-docker-compose down
+docker compose down
 
 # Restart the service
-docker-compose restart
+docker compose restart
 
 # Rebuild after code changes
-docker-compose up -d --build
+docker compose up -d --build
 
 # Remove everything (including data)
-docker-compose down -v
+docker compose down -v
 ```
 
 ## Project Structure
@@ -139,7 +139,7 @@ Simple-Uptime-Monitor/
 ├── config.yaml             # Your configuration
 ├── .env                    # Secrets (gitignored)
 ├── Dockerfile              # Docker image definition
-├── docker-compose.yml      # Docker Compose configuration
+├── compose.yaml      # Docker Compose configuration
 └── requirements.txt        # Python dependencies
 ```
 
@@ -154,7 +154,7 @@ Simple-Uptime-Monitor/
 ### Custom Network
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 services:
   uptime-monitor:
     networks:
@@ -182,7 +182,7 @@ notifications:
 ### Monitoring Other Docker Containers
 
 ```yaml
-# docker-compose.yml
+# compose.yaml
 services:
   uptime-monitor:
     volumes:
@@ -210,12 +210,12 @@ Features:
 
 ```bash
 # Check logs
-docker-compose logs uptime-monitor
+docker compose logs uptime-monitor
 
 # Check if port 5000 is already in use
 sudo netstat -tulpn | grep 5000
 
-# Change port in docker-compose.yml if needed
+# Change port in compose.yaml if needed
 ports:
   - "5001:5000"
 ```
@@ -229,7 +229,7 @@ SQLite doesn't handle high write concurrency well. If monitoring hundreds of ser
 
 ### Ping monitors not working in Docker
 
-Ping requires elevated privileges. Add to docker-compose.yml:
+Ping requires elevated privileges. Add to compose.yaml:
 
 ```yaml
 services:
@@ -265,7 +265,7 @@ python -m uptime_monitor.main
 vim uptime_monitor/...
 
 # Rebuild and restart
-docker-compose up -d --build
+docker compose up -d --build
 ```
 
 ## Requirements
