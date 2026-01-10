@@ -74,10 +74,18 @@ if [ ! -f "$INSTALL_DIR/.env" ]; then
     echo ".env file created - EDIT THIS FILE to add your secrets!"
 fi
 
-# Install systemd service
+# Install systemd service (if systemd is available)
 echo "Installing systemd service..."
-sudo cp "$INSTALL_DIR/install/$SERVICE_NAME" "/etc/systemd/system/$SERVICE_NAME"
-sudo systemctl daemon-reload
+if command -v systemctl &> /dev/null && systemctl --version &> /dev/null; then
+    sudo cp "$INSTALL_DIR/install/$SERVICE_NAME" "/etc/systemd/system/$SERVICE_NAME"
+    sudo systemctl daemon-reload
+    echo "Systemd service installed successfully!"
+    SYSTEMD_AVAILABLE=true
+else
+    echo "⚠ Systemd not available (common on WSL)"
+    echo "  You can enable systemd in WSL2 or run manually"
+    SYSTEMD_AVAILABLE=false
+fi
 
 echo ""
 echo "========================================="
@@ -87,14 +95,30 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit config.yaml to configure your monitors"
 echo "  2. Edit .env to add your secrets (SMTP password, webhook URLs, etc.)"
-echo "  3. Start the service:"
-echo "     sudo systemctl start Simple-Uptime-Monitor"
-echo "  4. Enable auto-start on boot:"
-echo "     sudo systemctl enable Simple-Uptime-Monitor"
-echo "  5. Check status:"
-echo "     sudo systemctl status Simple-Uptime-Monitor"
-echo "  6. View logs:"
-echo "     sudo journalctl -u Simple-Uptime-Monitor -f"
+echo ""
+
+if [ "$SYSTEMD_AVAILABLE" = true ]; then
+    echo "  3. Start the service:"
+    echo "     sudo systemctl start Simple-Uptime-Monitor"
+    echo "  4. Enable auto-start on boot:"
+    echo "     sudo systemctl enable Simple-Uptime-Monitor"
+    echo "  5. Check status:"
+    echo "     sudo systemctl status Simple-Uptime-Monitor"
+    echo "  6. View logs:"
+    echo "     sudo journalctl -u Simple-Uptime-Monitor -f"
+else
+    echo "  3. Enable systemd in WSL2 (recommended):"
+    echo "     Add to /etc/wsl.conf:"
+    echo "     [boot]"
+    echo "     systemd=true"
+    echo "     Then restart WSL: wsl.exe --shutdown"
+    echo ""
+    echo "  OR run manually:"
+    echo "     cd $INSTALL_DIR"
+    echo "     source venv/bin/activate"
+    echo "     python -m uptime_monitor.main"
+fi
+
 echo ""
 echo "Web dashboard will be available at: http://localhost:5000"
 echo ""
