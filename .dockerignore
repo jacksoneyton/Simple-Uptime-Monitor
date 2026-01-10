@@ -16,9 +16,9 @@ data/
 *.db-shm
 *.db-wal
 
-# Config (use examples in container)
-config.yaml
-.env
+# Config files are mounted as volumes, not copied
+# config.yaml - will be created from config.default.yaml in Dockerfile
+# .env - mounted as volume
 
 # Git
 .git/

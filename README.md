@@ -1,6 +1,6 @@
 # Simple Uptime Monitor
 
-A simple, YAML-configured uptime monitoring system with a web dashboard - inspired by Uptime Kuma but designed for simplicity and minimal dependencies.
+A simple, Docker-based uptime monitoring system with a web dashboard - inspired by Uptime Kuma but designed for simplicity and minimal dependencies.
 
 ## Features
 
@@ -9,74 +9,67 @@ A simple, YAML-configured uptime monitoring system with a web dashboard - inspir
 - **Web Dashboard**: Real-time status dashboard with grouping and history charts
 - **Notifications**: Email (SMTP), Discord, and Slack webhook support
 - **SQLite Database**: Lightweight persistence with history tracking
-- **Systemd Service**: Runs as a background service on Linux
 - **SSL Certificate Monitoring**: Automatic SSL expiration alerts
 - **Incident Tracking**: Automatic downtime incident management
-- **Multi-Platform**: WSL, Ubuntu/Debian, and Docker support
 - **Web UI Management**: Add, edit, and delete monitors via web interface
 - **Cyberpunk Theme**: Dark, neon-glowing aesthetic with real-time updates
+- **Docker Native**: Single command deployment
 
-## Quick Start
+## Quick Start (Docker)
 
-### 1. Installation
-
-The installer supports **WSL**, **Ubuntu/Debian**, and **Docker**:
+### 1. Clone the repository
 
 ```bash
-cd /home/jack/Simple-Uptime-Monitor
-bash install/install.sh
+git clone https://github.com/jacksoneyton/Simple-Uptime-Monitor.git
+cd Simple-Uptime-Monitor
 ```
 
-The installer will:
-- Auto-detect your environment (WSL/Docker/Linux)
-- Create a Python virtual environment
-- Install all dependencies
-- Initialize the SQLite database
-- Create a minimal working configuration
-- Install and **start** the service automatically
-- Set up auto-start on boot (systemd or alternatives)
+### 2. Start with Docker Compose
 
-### 2. Access the Dashboard
+```bash
+docker-compose up -d
+```
 
-The service starts automatically after installation!
-
-Open your browser to: **http://localhost:5000**
+That's it! The service is now running at **http://localhost:5000**
 
 ### 3. Add Monitors
 
-**No configuration file editing required!** Add monitors via the web UI:
+Navigate to **http://localhost:5000/monitors/manage** and click "Add New Monitor"
 
-1. Navigate to **http://localhost:5000/monitors/manage**
-2. Click "Add New Monitor"
-3. Fill in the monitor details (name, type, URL, etc.)
-4. Save - the monitor starts checking immediately
+No configuration file editing required - add everything via the web UI!
 
-### 4. Optional: Configure Notifications
+## Configuration
 
-To receive alerts, edit `.env` with your notification credentials:
+### Basic Setup
+
+The default configuration works out of the box. To customize:
+
+1. **Edit config.yaml** (optional) - set timezone, intervals, etc.
+2. **Edit .env** (for notifications) - add SMTP passwords, webhook URLs
 
 ```bash
-SMTP_PASSWORD=your_password
+# .env example
+SMTP_PASSWORD=your_smtp_password
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
 ```
 
-Then add notification channels via the web UI or edit `config.yaml`
+### Persistent Data
 
-### 5. Service Management
+Data is persisted in the `./data` directory:
+- `data/uptime.db` - SQLite database with all history
+- `data/uptime-monitor.log` - Application logs
 
-**With systemd (Ubuntu/Debian):**
-```bash
-sudo systemctl status Simple-Uptime-Monitor  # Check status
-sudo systemctl restart Simple-Uptime-Monitor # Restart
-sudo systemctl stop Simple-Uptime-Monitor    # Stop
-sudo journalctl -u Simple-Uptime-Monitor -f  # View logs
-```
+### Docker Compose Options
 
-**Without systemd (WSL/Docker):**
-```bash
-bash install/start.sh                        # Start service
-bash install/stop.sh                         # Stop service
-tail -f data/uptime-monitor.log              # View logs
+```yaml
+services:
+  uptime-monitor:
+    ports:
+      - "5000:5000"      # Change port if needed
+    environment:
+      - TZ=America/New_York  # Set your timezone
+    restart: unless-stopped  # Auto-restart on failure
 ```
 
 ## Monitor Types
@@ -97,7 +90,29 @@ tail -f data/uptime-monitor.log              # View logs
 - **Discord**: Webhook-based Discord messages
 - **Slack**: Webhook-based Slack messages
 
-Each monitor can trigger different notification channels on state changes (up, down, SSL expiration).
+Configure notification channels in `config.yaml` or via the web UI.
+
+## Docker Commands
+
+```bash
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+
+# Restart the service
+docker-compose restart
+
+# Rebuild after code changes
+docker-compose up -d --build
+
+# Remove everything (including data)
+docker-compose down -v
+```
 
 ## Project Structure
 
@@ -113,52 +128,74 @@ Simple-Uptime-Monitor/
 │   ├── scheduler.py        # Monitor orchestration
 │   └── webapp.py           # Flask web application
 ├── static/                  # CSS and JavaScript
-├── data/                    # SQLite database
-├── install/                 # Installation scripts
-├── docs/                    # Documentation
+├── data/                    # SQLite database (persistent)
 ├── config.yaml             # Your configuration
 ├── .env                    # Secrets (gitignored)
+├── Dockerfile              # Docker image definition
+├── docker-compose.yml      # Docker Compose configuration
 └── requirements.txt        # Python dependencies
 ```
 
 ## Documentation
 
-- **[Installation Guide](docs/INSTALLATION.md)**: Detailed installation instructions
 - **[YAML Reference](docs/YAML_REFERENCE.md)**: Complete configuration documentation
 - **[Push Monitor API](docs/API.md)**: API documentation for push monitors
+- **[Installation Guide](docs/INSTALLATION.md)**: Bare-metal installation (alternative to Docker)
 
-## Configuration Example
+## Advanced Usage
 
-See `config.example.yaml` for a comprehensive example with all monitor types and options.
+### Custom Network
 
-## Development
+```yaml
+# docker-compose.yml
+services:
+  uptime-monitor:
+    networks:
+      - monitoring
 
-### Running Locally (Without Systemd)
-
-```bash
-# Activate virtual environment
-source venv/bin/activate
-
-# Run directly
-python -m uptime_monitor.main
+networks:
+  monitoring:
+    driver: bridge
 ```
 
-### Database Management
+### Environment Variables
 
-```bash
-# Initialize/reset database
-python -m uptime_monitor.database --init data/uptime.db
+All configuration values support environment variable substitution:
+
+```yaml
+# config.yaml
+notifications:
+  - name: "email"
+    type: "email"
+    config:
+      smtp_password: "${SMTP_PASSWORD}"
+      smtp_host: "${SMTP_HOST:-smtp.gmail.com}"
 ```
 
-## Requirements
+### Monitoring Other Docker Containers
 
-- Python 3.8+
-- Linux with systemd (tested on WSL Ubuntu)
-- SQLite 3
+```yaml
+# docker-compose.yml
+services:
+  uptime-monitor:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+```
 
-## License
+Then add Docker monitors via the web UI.
 
-This project is provided as-is for personal and commercial use.
+## Web Interface
+
+Access the dashboard at **http://localhost:5000**
+
+Features:
+- Real-time status updates (5-second polling)
+- Add/edit/delete monitors via web UI
+- Response time graphs (Chart.js)
+- Incident tracking with history
+- Grouped monitor display
+- Hot-reload configuration (no restart needed)
+- Cyberpunk theme with neon glow effects
 
 ## Troubleshooting
 
@@ -166,22 +203,76 @@ This project is provided as-is for personal and commercial use.
 
 ```bash
 # Check logs
-sudo journalctl -u uptime-monitor -n 50
+docker-compose logs uptime-monitor
 
-# Verify configuration
-python3 -c "from uptime_monitor.config import load_config; load_config()"
+# Check if port 5000 is already in use
+sudo netstat -tulpn | grep 5000
+
+# Change port in docker-compose.yml if needed
+ports:
+  - "5001:5000"
 ```
-
-### Ping monitors not working
-
-Ping monitors use unprivileged ICMP which should work without root on most systems. If you encounter issues, check that `icmplib` is properly installed.
 
 ### Database locked errors
 
-SQLite doesn't handle high write concurrency well. If you're monitoring hundreds of services, consider:
-- Increasing check intervals
-- Reducing retry counts
-- Limiting concurrent checks
+SQLite doesn't handle high write concurrency well. If monitoring hundreds of services:
+- Increase check intervals
+- Reduce retry counts
+- Consider PostgreSQL for very large deployments
+
+### Ping monitors not working in Docker
+
+Ping requires elevated privileges. Add to docker-compose.yml:
+
+```yaml
+services:
+  uptime-monitor:
+    cap_add:
+      - NET_RAW
+```
+
+## Development
+
+### Running Locally Without Docker
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+pip install -e .
+
+# Initialize database
+python -m uptime_monitor.database --init data/uptime.db
+
+# Run the application
+python -m uptime_monitor.main
+```
+
+### Making Changes
+
+```bash
+# Edit code
+vim uptime_monitor/...
+
+# Rebuild and restart
+docker-compose up -d --build
+```
+
+## Requirements
+
+- Docker 20.10+
+- Docker Compose 1.29+
+
+OR for bare-metal installation:
+- Python 3.8+
+- SQLite 3
+
+## License
+
+This project is provided as-is for personal and commercial use.
 
 ## Support
 
@@ -191,104 +282,18 @@ For issues and feature requests, please create an issue in the project repositor
 
 **Simple Uptime Monitor** - Monitor your services with simplicity.
 
-## Deployment Options
+## Alternative Installation (Bare Metal)
 
-### Ubuntu/Debian (with systemd)
+If you prefer not to use Docker, you can install directly on:
+- Ubuntu/Debian with systemd
+- WSL (Windows Subsystem for Linux)
 
-The installer automatically starts the service and enables auto-start on boot:
+See **[Installation Guide](docs/INSTALLATION.md)** for detailed instructions.
 
+Quick install:
 ```bash
-bash install/install.sh
-# Service is now running! Access: http://localhost:5000
-```
-
-Manage the service:
-```bash
-sudo systemctl status Simple-Uptime-Monitor   # Check status
-sudo systemctl restart Simple-Uptime-Monitor  # Restart
-sudo journalctl -u Simple-Uptime-Monitor -f   # View logs
-```
-
-### WSL (Windows Subsystem for Linux)
-
-The installer automatically starts the service. For auto-start on boot, choose one of these options:
-
-**Option 1: Enable systemd in WSL (recommended)**
-```bash
-# Edit /etc/wsl.conf
-sudo nano /etc/wsl.conf
-
-# Add these lines:
-[boot]
-systemd=true
-
-# Restart WSL from PowerShell
-wsl.exe --shutdown
-
-# Re-run installer to set up systemd service
+cd Simple-Uptime-Monitor
 bash install/install.sh
 ```
 
-**Option 2: WSL boot command (WSL 0.67.6+)**
-```bash
-# Edit /etc/wsl.conf
-sudo nano /etc/wsl.conf
-
-# Add this line:
-[boot]
-command="bash /home/jack/Simple-Uptime-Monitor/install/start.sh"
-
-# Restart WSL from PowerShell
-wsl.exe --shutdown
-```
-
-**Option 3: Manual control**
-```bash
-bash install/start.sh  # Start service
-bash install/stop.sh   # Stop service
-```
-
-### Docker
-
-```bash
-# Build the image
-docker build -t simple-uptime-monitor .
-
-# Run with persistent data
-docker run -d \
-  --name uptime-monitor \
-  -p 5000:5000 \
-  -v $(pwd)/config.yaml:/opt/Simple-Uptime-Monitor/config.yaml \
-  -v $(pwd)/data:/opt/Simple-Uptime-Monitor/data \
-  simple-uptime-monitor
-
-# View logs
-docker logs -f uptime-monitor
-```
-
-## Uninstallation
-
-```bash
-bash install/uninstall.sh
-```
-
-The uninstaller provides options to:
-1. **Remove everything** - Service, venv, database, config, logs
-2. **Remove service only** - Keep data and config for reinstall
-3. **Remove service + venv** - Keep database and config
-4. **Cancel** - Exit without changes
-
-## Web Interface
-
-After installation, access the web dashboard at:
-- **URL**: http://localhost:5000
-- **Manage Monitors**: http://localhost:5000/monitors/manage
-
-Features:
-- Real-time status updates (5-second polling)
-- Add/edit/delete monitors via web UI
-- Response time graphs (Chart.js)
-- Incident tracking with history
-- Grouped monitor display
-- Hot-reload configuration (no restart needed)
-
+Note: Docker deployment is recommended for simplicity and portability.
