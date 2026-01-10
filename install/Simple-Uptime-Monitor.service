@@ -31,7 +31,7 @@ ReadWritePaths=/home/jack/Simple-Uptime-Monitor/data /home/jack/Simple-Uptime-Mo
 # Logging
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=uptime-monitor
+SyslogIdentifier=Simple-Uptime-Monitor
 
 [Install]
 WantedBy=multi-user.target
