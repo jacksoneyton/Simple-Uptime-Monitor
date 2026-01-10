@@ -109,23 +109,40 @@ if [ "$SYSTEMD_AVAILABLE" = true ]; then
     echo "  6. View logs:"
     echo "     sudo journalctl -u Simple-Uptime-Monitor -f"
 else
-    echo "  3. Running without systemd:"
+    echo "  3. Start the service manually:"
     echo ""
-    if grep -qi microsoft /proc/version; then
-        echo "     WSL: Enable systemd (recommended):"
-        echo "       Add to /etc/wsl.conf:"
-        echo "       [boot]"
-        echo "       systemd=true"
-        echo "       Then restart WSL: wsl.exe --shutdown"
-        echo ""
-    fi
-    echo "     OR run manually:"
-    echo "       cd $INSTALL_DIR"
-    echo "       source venv/bin/activate"
-    echo "       python -m uptime_monitor.main"
-    echo ""
+
     if [ -f /.dockerenv ]; then
-        echo "     Docker: Use the manual command as your ENTRYPOINT/CMD"
+        echo "     === DOCKER DETECTED ==="
+        echo "     To start the service now:"
+        echo "       cd $INSTALL_DIR"
+        echo "       source venv/bin/activate"
+        echo "       python -m uptime_monitor.main"
+        echo ""
+        echo "     For production Docker deployments, use as ENTRYPOINT/CMD:"
+        echo "       CMD [\"venv/bin/python\", \"-m\", \"uptime_monitor.main\"]"
+        echo ""
+    elif grep -qi microsoft /proc/version; then
+        echo "     === WSL DETECTED ==="
+        echo "     Option 1 - Enable systemd (recommended):"
+        echo "       sudo nano /etc/wsl.conf"
+        echo "       Add these lines:"
+        echo "         [boot]"
+        echo "         systemd=true"
+        echo "       Then restart WSL from PowerShell: wsl.exe --shutdown"
+        echo "       After restart, use systemctl commands above"
+        echo ""
+        echo "     Option 2 - Run manually:"
+        echo "       cd $INSTALL_DIR"
+        echo "       source venv/bin/activate"
+        echo "       python -m uptime_monitor.main"
+        echo ""
+    else
+        echo "     To start the service:"
+        echo "       cd $INSTALL_DIR"
+        echo "       source venv/bin/activate"
+        echo "       python -m uptime_monitor.main"
+        echo ""
     fi
 fi
 
