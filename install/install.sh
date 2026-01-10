@@ -7,6 +7,9 @@ INSTALL_DIR="/home/jack/Simple-Uptime-Monitor"
 SERVICE_NAME="Simple-Uptime-Monitor.service"
 VENV_DIR="$INSTALL_DIR/venv"
 
+# Change to installation directory
+cd "$INSTALL_DIR"
+
 echo "========================================="
 echo "Simple Uptime Monitor Installation"
 echo "========================================="
@@ -55,7 +58,7 @@ mkdir -p "$INSTALL_DIR/data"
 
 # Initialize database (now that data directory exists)
 echo "Initializing database..."
-python3 -m uptime_monitor.database --init data/uptime.db
+python3 -m uptime_monitor.database --init "$INSTALL_DIR/data/uptime.db"
 
 # Copy example config if needed
 if [ ! -f "$INSTALL_DIR/config.yaml" ]; then
