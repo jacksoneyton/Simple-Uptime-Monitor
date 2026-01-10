@@ -45,6 +45,10 @@ source "$VENV_DIR/bin/activate"
 pip install --upgrade pip
 pip install -r "$INSTALL_DIR/requirements.txt"
 
+# Install the package in editable mode
+echo "Installing uptime_monitor package..."
+pip install -e "$INSTALL_DIR"
+
 # Create data directory
 echo "Creating data directory..."
 mkdir -p "$INSTALL_DIR/data"
