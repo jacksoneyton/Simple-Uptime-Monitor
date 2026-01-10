@@ -76,11 +76,19 @@ echo "✓ python3-venv is available"
 
 # Create virtual environment
 echo "Creating virtual environment..."
-if [ ! -d "$VENV_DIR" ]; then
+if [ -d "$VENV_DIR" ]; then
+    # Check if venv is valid
+    if [ ! -f "$VENV_DIR/bin/activate" ] || [ ! -f "$VENV_DIR/bin/python" ]; then
+        echo "⚠ Existing virtual environment is incomplete, recreating..."
+        rm -rf "$VENV_DIR"
+        python3 -m venv "$VENV_DIR"
+        echo "Virtual environment created"
+    else
+        echo "Virtual environment already exists"
+    fi
+else
     python3 -m venv "$VENV_DIR"
     echo "Virtual environment created"
-else
-    echo "Virtual environment already exists"
 fi
 
 # Activate venv and install dependencies
