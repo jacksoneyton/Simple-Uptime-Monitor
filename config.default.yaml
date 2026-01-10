@@ -1,0 +1,47 @@
+# Simple Uptime Monitor - Default Configuration
+# This minimal configuration allows the service to start immediately.
+# Add monitors via the web UI at http://localhost:5000/monitors/manage
+
+# ============================================
+# GLOBAL SETTINGS
+# ============================================
+global:
+  # Default check interval for all monitors (can be overridden per monitor)
+  default_interval: 60  # seconds
+
+  # Database location
+  database: "data/uptime.db"
+
+  # Web server settings
+  web:
+    host: "0.0.0.0"  # Listen on all interfaces
+    port: 5000
+    secret_key: "CHANGE-THIS-TO-RANDOM-SECRET"  # For session management
+
+  # Timezone for reporting
+  timezone: "America/New_York"
+
+  # Data retention policy
+  retention:
+    ping_history_days: 30      # Keep detailed check results for 30 days
+    aggregate_after_days: 90   # Aggregate older data into daily stats
+
+# ============================================
+# NOTIFICATION CHANNELS (Optional)
+# ============================================
+# Add notification channels here or leave empty
+# See config.example.yaml for examples
+notifications: []
+
+# ============================================
+# MONITOR GROUPS (Optional)
+# ============================================
+# Groups are automatically created when you add monitors via the UI
+groups: []
+
+# ============================================
+# MONITORS
+# ============================================
+# Add monitors via the web UI at http://localhost:5000/monitors/manage
+# Or configure them here manually (see config.example.yaml)
+monitors: []

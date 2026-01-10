@@ -28,11 +28,11 @@ RUN mkdir -p data
 RUN . venv/bin/activate && \
     python3 -m uptime_monitor.database --init /opt/Simple-Uptime-Monitor/data/uptime.db
 
-# Copy example config if needed
-RUN if [ ! -f config.yaml ]; then cp config.example.yaml config.yaml; fi
+# Copy default config (minimal working configuration)
+RUN if [ ! -f config.yaml ]; then cp config.default.yaml config.yaml; fi
 
 # Expose web dashboard port
 EXPOSE 5000
 
-# Run the application
+# Run the application (foreground for Docker)
 CMD ["venv/bin/python", "-m", "uptime_monitor.main"]

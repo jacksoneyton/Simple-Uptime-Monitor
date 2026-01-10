@@ -32,56 +32,52 @@ The installer will:
 - Create a Python virtual environment
 - Install all dependencies
 - Initialize the SQLite database
-- Create configuration templates
-- Install systemd service (if available)
+- Create a minimal working configuration
+- Install and **start** the service automatically
+- Set up auto-start on boot (systemd or alternatives)
 
-### 2. Configuration
+### 2. Access the Dashboard
 
-Edit `config.yaml` to add your monitors:
+The service starts automatically after installation!
 
-```yaml
-monitors:
-  - name: "My Website"
-    type: "http"
-    enabled: true
-    group: "Production Services"
-    interval: 30
-    config:
-      url: "https://example.com"
-      expected_status_codes: [200]
-    notifications:
-      - "admin_email"
-    alert_on:
-      - down
-      - up
-```
+Open your browser to: **http://localhost:5000**
 
-Add secrets to `.env`:
+### 3. Add Monitors
+
+**No configuration file editing required!** Add monitors via the web UI:
+
+1. Navigate to **http://localhost:5000/monitors/manage**
+2. Click "Add New Monitor"
+3. Fill in the monitor details (name, type, URL, etc.)
+4. Save - the monitor starts checking immediately
+
+### 4. Optional: Configure Notifications
+
+To receive alerts, edit `.env` with your notification credentials:
 
 ```bash
 SMTP_PASSWORD=your_password
 DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
 ```
 
-### 3. Start the Service
+Then add notification channels via the web UI or edit `config.yaml`
 
+### 5. Service Management
+
+**With systemd (Ubuntu/Debian):**
 ```bash
-# Start now
-sudo systemctl start uptime-monitor
-
-# Enable auto-start on boot
-sudo systemctl enable uptime-monitor
-
-# Check status
-sudo systemctl status uptime-monitor
-
-# View logs
-sudo journalctl -u uptime-monitor -f
+sudo systemctl status Simple-Uptime-Monitor  # Check status
+sudo systemctl restart Simple-Uptime-Monitor # Restart
+sudo systemctl stop Simple-Uptime-Monitor    # Stop
+sudo journalctl -u Simple-Uptime-Monitor -f  # View logs
 ```
 
-### 4. Access the Dashboard
-
-Open your browser to: **http://localhost:5000**
+**Without systemd (WSL/Docker):**
+```bash
+bash install/start.sh                        # Start service
+bash install/stop.sh                         # Stop service
+tail -f data/uptime-monitor.log              # View logs
+```
 
 ## Monitor Types
 
@@ -198,42 +194,58 @@ For issues and feature requests, please create an issue in the project repositor
 ## Deployment Options
 
 ### Ubuntu/Debian (with systemd)
+
+The installer automatically starts the service and enables auto-start on boot:
+
 ```bash
-# Install
 bash install/install.sh
+# Service is now running! Access: http://localhost:5000
+```
 
-# Start service
-sudo systemctl start Simple-Uptime-Monitor
-sudo systemctl enable Simple-Uptime-Monitor
-
-# Check status
-sudo systemctl status Simple-Uptime-Monitor
-
-# View logs
-sudo journalctl -u Simple-Uptime-Monitor -f
+Manage the service:
+```bash
+sudo systemctl status Simple-Uptime-Monitor   # Check status
+sudo systemctl restart Simple-Uptime-Monitor  # Restart
+sudo journalctl -u Simple-Uptime-Monitor -f   # View logs
 ```
 
 ### WSL (Windows Subsystem for Linux)
 
-**Option 1: With systemd (recommended)**
+The installer automatically starts the service. For auto-start on boot, choose one of these options:
+
+**Option 1: Enable systemd in WSL (recommended)**
 ```bash
-# Enable systemd in WSL
+# Edit /etc/wsl.conf
 sudo nano /etc/wsl.conf
-# Add:
-# [boot]
-# systemd=true
+
+# Add these lines:
+[boot]
+systemd=true
 
 # Restart WSL from PowerShell
 wsl.exe --shutdown
 
-# Then use systemctl commands as above
+# Re-run installer to set up systemd service
+bash install/install.sh
 ```
 
-**Option 2: Manual mode**
+**Option 2: WSL boot command (WSL 0.67.6+)**
 ```bash
-cd /home/jack/Simple-Uptime-Monitor
-source venv/bin/activate
-python -m uptime_monitor.main
+# Edit /etc/wsl.conf
+sudo nano /etc/wsl.conf
+
+# Add this line:
+[boot]
+command="bash /home/jack/Simple-Uptime-Monitor/install/start.sh"
+
+# Restart WSL from PowerShell
+wsl.exe --shutdown
+```
+
+**Option 3: Manual control**
+```bash
+bash install/start.sh  # Start service
+bash install/stop.sh   # Stop service
 ```
 
 ### Docker

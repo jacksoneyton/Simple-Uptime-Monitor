@@ -6,7 +6,29 @@
       "Bash(git init:*)",
       "Bash(git add:*)",
       "Bash(sudo apt-get:*)",
-      "Bash(sudo apt-get install:*)"
+      "Bash(sudo apt-get install:*)",
+      "Bash(bash install/install.sh:*)",
+      "Bash(python3:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(python -m uptime_monitor.database:*)",
+      "Bash(python -m uptime_monitor.main:*)",
+      "Bash(sqlite3:*)",
+      "Bash(pkill:*)",
+      "Bash(tee:*)",
+      "Bash(python -m json.tool:*)",
+      "Bash(python:*)",
+      "Bash(sudo cp:*)",
+      "Bash(sudo systemctl daemon-reload:*)",
+      "Bash(sudo systemctl enable:*)",
+      "Bash(sudo systemctl start uptime-monitor)",
+      "Bash(sudo systemctl status:*)",
+      "Bash(sudo systemctl:*)",
+      "Bash(sudo journalctl:*)",
+      "Bash(sudo grep:*)",
+      "Bash(git rm:*)",
+      "Bash(bash -n:*)",
+      "Bash(chmod:*)"
     ]
   }
 }
